@@ -1,11 +1,25 @@
 #include <mpc_controller/pacejka_controller/mpcc_pacejka_controller.h>
-
+#include <mpc_controller/pacejka_controller/mpcc_pacejka_coef_copy.h>
+#include <cmath>
+#include <string>
 #ifdef acados_pacejka_mpcc_solver_FOUND
 #include "acados_pacejka_mpcc_solver/acados_pacejka_mpcc_solver.h"
 #endif
 
+
+extern std::vector<double> X_coef_0;
+extern std::vector<double> X_coef_1;
+extern std::vector<double> X_coef_2;
+extern std::vector<double> X_coef_3;
+extern std::vector<double> Y_coef_0;
+extern std::vector<double> Y_coef_1;
+extern std::vector<double> Y_coef_2;
+extern std::vector<double> Y_coef_3;
+
+
 namespace crs_controls
 {
+
 
 void PacejkaMpccController::loadMpcSolver()
 {
@@ -108,7 +122,6 @@ void PacejkaMpccController::initialize(crs_models::pacejka_model::pacejka_car_st
 
     // Set initial input (nothing to do, its zero)
   }
-
   // Run solver
   for (int run = 0; run < N_WARM_START; run++)
   {
@@ -117,16 +130,43 @@ void PacejkaMpccController::initialize(crs_models::pacejka_model::pacejka_car_st
       // Ugly indexing to get distance on track of predicted solution
       double distance_on_track = last_solution.states_[stage * solver_->getStateDimension() + pacejka_vars::THETA];
       // Convert it to track indice using density of track points which are regularly sampled
-      int reference_track_index = distance_on_track * getStaticTrack()->getDensity();
+      // int reference_track_index = distance_on_track * getStaticTrack()->getDensity();
+      // int reference_track_index =  distance_on_track * (3980 / getStaticTrack()->getMaxArcLength()) - 1;
+      std::cout << "Distance on track (Initialize Function): " << distance_on_track <<"\n";
+      int reference_track_index = distance_on_track * 2.9367;
+      double X = X_coef_3[reference_track_index] +
+                 X_coef_2[reference_track_index] * distance_on_track + 
+                 X_coef_1[reference_track_index] * std::pow(distance_on_track, 2) +
+                 X_coef_0[reference_track_index] * std::pow(distance_on_track, 3);
 
+      double Y = Y_coef_3[reference_track_index] +
+                 Y_coef_2[reference_track_index] * distance_on_track + 
+                 Y_coef_1[reference_track_index] * std::pow(distance_on_track, 2) +
+                 Y_coef_0[reference_track_index] * std::pow(distance_on_track, 3);
+
+      double x_rate= X_coef_2[reference_track_index] +
+                      2 * X_coef_1[reference_track_index] * distance_on_track + 
+                      3 * X_coef_0[reference_track_index] * std::pow(distance_on_track, 2); 
+
+      double y_rate = Y_coef_2[reference_track_index] +
+                      2 * Y_coef_1[reference_track_index] * distance_on_track + 
+                      3 * Y_coef_0[reference_track_index] * std::pow(distance_on_track, 2);  
+
+      double phi = atan2(y_rate , x_rate);
       // Update tracking point based on predicted distance on track
       mpc_solvers::pacejka_solvers::trajectory_track_point track_point;
-      track_point.x = getStaticTrack()->operator[](reference_track_index).x();
-      track_point.y = getStaticTrack()->operator[](reference_track_index).y();
-      track_point.grad_x = getStaticTrack()->getRate(reference_track_index).x();
-      track_point.grad_y = getStaticTrack()->getRate(reference_track_index).y();
-      track_point.theta = getStaticTrack()->getArcLength(reference_track_index);
-      track_point.phi = getStaticTrack()->getTrackAngle(reference_track_index);
+      // track_point.x = getStaticTrack()->operator[](reference_track_index).x();
+      // track_point.y = getStaticTrack()->operator[](reference_track_index).y();
+      // track_point.grad_x = getStaticTrack()->getRate(reference_track_index).x();
+      // track_point.grad_y = getStaticTrack()->getRate(reference_track_index).y();
+      // track_point.theta = getStaticTrack()->getArcLength(reference_track_index);
+      // track_point.phi = getStaticTrack()->getTrackAngle(reference_track_index);
+      track_point.x = X;
+      track_point.y = Y;
+      track_point.grad_x = x_rate;
+      track_point.grad_y = y_rate;
+      track_point.theta = distance_on_track;
+      track_point.phi = phi;
 
       // Update reference visualization
       last_solution.reference_on_track_[stage] = Eigen::Vector3d(track_point.x, track_point.y, track_point.phi);
@@ -172,19 +212,21 @@ crs_models::pacejka_model::pacejka_car_input PacejkaMpccController::getControlIn
 
   // initialize state to virtually advanced vehicle states and inputs
   auto virtual_state = model_->applyModel(state, last_input_, config_.lag_compensation_time);
-
+  
+  theta_ = getStaticTrack()->getArcLength(
+      getStaticTrack()->getClosestTrackPointIdx(Eigen::Vector2d(virtual_state.pos_x, virtual_state.pos_y)));
   double x0[] = {
     virtual_state.pos_x, virtual_state.pos_y, virtual_state.yaw,
     virtual_state.vel_x, virtual_state.vel_y, virtual_state.yaw_rate,
     last_input_.torque,  last_input_.steer,   theta_,
   };
-
+  
   // if lap is done, increase lap counter
   if (theta_ > (laps_ + 1) * max_arc_length)
   {
     laps_++;
   }
-
+ 
   solver_->setInitialState(x0);
   // Run solver
   for (int current_stage = 0; current_stage < solver_->getHorizonLength(); current_stage++)
@@ -197,21 +239,47 @@ crs_models::pacejka_model::pacejka_car_input PacejkaMpccController::getControlIn
     double distance_on_track = last_solution.states_[next_stage * solver_->getStateDimension() + pacejka_vars::THETA] -
                                laps_ * getStaticTrack()->getMaxArcLength();
     // Convert it to track indice using density of track points which are regularly sampled
-    int reference_track_index = distance_on_track * getStaticTrack()->getDensity();
-    std::cout << "Last Solution States x: " << last_solution.states_[next_stage * solver_->getStateDimension() + pacejka_vars::X] << "\n";
-    std::cout << "Last Solution States y: " << last_solution.states_[next_stage * solver_->getStateDimension() + pacejka_vars::Y] << "\n";
-    std::cout << "Reference Trajectory x: " << getStaticTrack()->operator[](reference_track_index).x() << "\n";
-    std::cout << "Reference Trajectory y: " << getStaticTrack()->operator[](reference_track_index).y() << "\n";
+    //int reference_track_index = distance_on_track * getStaticTrack()->getDensity();
+    
+    int reference_track_index = distance_on_track * 2.9367;
+    std::cout << "Distance on track (get control Function): " << distance_on_track <<"\n";
+    std::cout << "Reference Spline Index (get control Function): " << reference_track_index <<"\n";
+    std::cout << "Max Arc Length: " << getStaticTrack()->getMaxArcLength() <<"\n";
+
+    double X = X_coef_3[reference_track_index] +
+                X_coef_2[reference_track_index] * distance_on_track + 
+                X_coef_1[reference_track_index] * std::pow(distance_on_track, 2) +
+                X_coef_0[reference_track_index] * std::pow(distance_on_track, 3);
+
+    double Y = Y_coef_3[reference_track_index] +
+                Y_coef_2[reference_track_index] * distance_on_track + 
+                Y_coef_1[reference_track_index] * std::pow(distance_on_track, 2) +
+                Y_coef_0[reference_track_index] * std::pow(distance_on_track, 3);
+
+    double x_rate= X_coef_2[reference_track_index] +
+                    2 * X_coef_1[reference_track_index] * distance_on_track + 
+                    3 * X_coef_0[reference_track_index] * std::pow(distance_on_track, 2); 
+
+    double y_rate = Y_coef_2[reference_track_index] +
+                    2 * Y_coef_1[reference_track_index] * distance_on_track + 
+                    3 * Y_coef_0[reference_track_index] * std::pow(distance_on_track, 2);   
+
+    double phi = atan2(y_rate , x_rate);
     
     // Update tracking point based on predicted distance on track
     mpc_solvers::pacejka_solvers::trajectory_track_point track_point;
-    track_point.x = getStaticTrack()->operator[](reference_track_index).x();
-    track_point.y = getStaticTrack()->operator[](reference_track_index).y();
-    track_point.grad_x = getStaticTrack()->getRate(reference_track_index).x();
-    track_point.grad_y = getStaticTrack()->getRate(reference_track_index).y();
+    // track_point.x = getStaticTrack()->operator[](reference_track_index).x();
+    // track_point.y = getStaticTrack()->operator[](reference_track_index).y();
+    // track_point.grad_x = getStaticTrack()->getRate(reference_track_index).x();
+    // track_point.grad_y = getStaticTrack()->getRate(reference_track_index).y();
+    // track_point.theta = distance_on_track + laps_ * getStaticTrack()->getMaxArcLength();
+    // track_point.phi = getStaticTrack()->getTrackAngle(reference_track_index) + laps_ * 2 * M_PI;
+    track_point.x = X;
+    track_point.y = Y;
+    track_point.grad_x = x_rate;
+    track_point.grad_y = y_rate;
     track_point.theta = distance_on_track + laps_ * getStaticTrack()->getMaxArcLength();
-    track_point.phi = getStaticTrack()->getTrackAngle(reference_track_index) + laps_ * 2 * M_PI;
-
+    track_point.phi = phi + laps_ * 2 * M_PI;
     // Update reference visualization
     last_solution.reference_on_track_[current_stage] = Eigen::Vector3d(track_point.x, track_point.y, track_point.phi);
 
