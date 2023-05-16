@@ -1,0 +1,38 @@
+# High level configuration for acados solver creation
+
+solver_creation:
+  N: 40 # Time Horizon
+  Ts: 0.033 # 30 Hz
+
+# State Bounds
+model_bounds:
+    x_min: -3.0
+    x_max: 3.0
+
+    y_min: -3.0
+    y_max: 3.0
+
+    yaw_min: -1000.0
+    yaw_max: 1000.0
+
+    vx_min: 0.2
+    vx_max: 3.2
+
+    vy_min: -2.0
+    vy_max: 2.0
+
+    dyaw_min: -4.0
+    dyaw_max: 4.0
+
+
+    delta_min: -0.4
+    delta_max: 0.4
+
+    T_min: 0.0
+    T_max: 1.0
+
+    ddelta_min: -2.0
+    ddelta_max: 2.0
+
+    dT_min: -15.0
+    dT_max: 15.0

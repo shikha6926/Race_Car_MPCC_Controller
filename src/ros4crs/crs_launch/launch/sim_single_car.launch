@@ -1,0 +1,101 @@
+<launch>
+
+     <!-- =================================================================
+                            User Input Arguments
+         ================================================================= -->
+    
+    <arg name = "namespace"           default = "car1"       doc = "Namespace of all the nodes. Use this to launch different cars. "/>
+    <arg name = "experiment_name"     default = "pacejka_mpc" doc = "Name of the experiment folder that contains all .yaml configurations of the components "/>
+
+    <arg name = "view_rviz"           default = "true"        doc = "If true, starts an rviz node for visualization "/>
+    <arg name = "use_backtracker"     default = "false"       doc = "If true, uses a backtracker as defined in the backtracker.yaml config to recover from crashes "/>
+    <arg name = "bypass_estimator"    default = "false"       doc = "If true, bypasses the state estimation and directly uses the gt state of the simulator "/>
+    <arg name = "track_name"          default = "FREIBURG_FULL_TRACK"  doc = "Name of the track that should be loaded. "/>
+
+    <!-- Recording arguments  -->
+    <arg name = "record_bag"          default = "false"       doc = "if true, recoard a .bag file with all topics"/>
+    <arg name = "copy_config"         default = "true"        doc = "if true, backs up all .yaml configurations on execution" />
+
+    <arg name = "run_type"            default = "sim"         doc = "identifier for run type (sim|real|...). This is used to categorize backed up runs in folders" />
+
+
+    <arg name = "use_safety_filter"   default = "false"        doc = "if true, loads safety filter" />
+    <arg name = "launch_planner"      default = "false"        doc = "if true, launches a trajectory planner" />
+    <!--   ___
+         /     \  
+        | STOP  |   Only change other arguments if you do know what you are doing. You have been warned!
+         \ ___ /
+           ||        
+           ||  
+           ||
+        ~~~~~~~
+    -->
+    <!-- =================================================================
+                            Topic Names Definitions
+         ================================================================= -->
+
+    <arg name = "control_input_topic" default = "control_input"/>
+    <arg name = "vicon_topic"         default = "vicon"/>
+    <arg name = "imu_topic"           default = "imu"/>
+
+    <arg name = "control_state_topic" default = "ros_simulator/gt_state"     if     = "$(eval arg('bypass_estimator') == true)"/>
+    <arg name = "control_state_topic" default = "estimation_node/best_state" unless = "$(eval arg('bypass_estimator') == true)"/>
+
+    <!-- =================================================================
+                     Load the configuration files
+         ================================================================= -->
+
+    <arg name = "experiment_path"       default = "$(eval find('crs_launch') + '/../../../experiments/' + arg('experiment_name'))" />
+    <arg name = "model_config"          default = "$(arg experiment_path)/model.yaml" />
+    <arg name = "simulator_config"      default = "$(arg experiment_path)/simulator.yaml" />
+    <arg name = "controller_config"     default = "$(arg experiment_path)/controller.yaml" />
+    <arg name = "visualizer_config"     default = "$(arg experiment_path)/visualizer.yaml" />
+    <arg name = "backtracker_config"    default = "$(arg experiment_path)/backtracker.yaml" />
+    <arg name = "estimator_config"      default = "$(arg experiment_path)/estimator.yaml" />
+    <arg name = "safety_filter_config"  default = "$(arg experiment_path)/safety_filter.yaml" />
+
+    <!-- =================================================================
+                       Start the controlling framework
+        ================================================================= -->
+    <include file="$(find crs_launch)/launch/crs.launch">
+        <arg name = "namespace"            value = "$(arg namespace)"/>
+        <arg name = "view_rviz"            value = "$(arg view_rviz)"/>
+        <arg name = "use_backtracker"      value = "$(arg use_backtracker)"/>
+        <arg name = "track_name"           value = "$(arg track_name)"/>
+        <arg name = "copy_config"          value = "$(arg copy_config)"/>
+        <arg name = "record_bag"           value = "$(arg record_bag)"/>
+        <arg name = "run_type"             value = "$(arg run_type)"/>
+        <arg name = "launch_planner"       value = "$(arg launch_planner)"/>
+        
+        <arg name = "control_state_topic"  value = "$(arg control_state_topic)"/>
+        <arg name = "control_input_topic"  value = "$(arg control_input_topic)"/>
+        <arg name = "vicon_topic"          value = "$(arg vicon_topic)"/>
+        <arg name = "imu_topic"            value = "$(arg imu_topic)"/>
+
+        <arg name = "model_config"         value = "$(arg model_config)"/>
+        <arg name = "simulator_config"     value = "$(arg simulator_config)"/>
+        <arg name = "controller_config"    value = "$(arg controller_config)"/>
+        <arg name = "visualizer_config"    value = "$(arg visualizer_config)"/>
+        <arg name = "backtracker_config"   value = "$(arg backtracker_config)"/>
+        <arg name = "estimator_config"     value = "$(arg estimator_config)"/>
+        <arg name = "use_safety_filter"    value = "$(arg use_safety_filter)"/>
+        <arg name = "safety_filter_config" value = "$(arg safety_filter_config)"/>
+
+        <arg name = "disable_estimator"        value = "$(arg bypass_estimator)" />
+    </include>
+
+    <!-- =================================================================
+                       Start the simulator node
+        ================================================================= -->
+    <group ns = "$(arg namespace)">
+        <include file = "$(find ros_simulator)/launch/default.launch">
+            <arg name = "simulator_config"  value = "$(arg simulator_config)" />
+            <arg name = "control_input"     value = "$(arg control_input_topic)"/>
+            <arg name = "vicon_topic"       value = "$(arg vicon_topic)"/>
+            <arg name = "imu_topic"         value = "$(arg imu_topic)"/>
+            <arg name = "gt_state_topic"    value = "ros_simulator/gt_state"/>
+        </include>
+    </group>
+
+</launch>
+    

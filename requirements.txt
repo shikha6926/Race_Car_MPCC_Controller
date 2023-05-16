@@ -1,0 +1,11 @@
+# Packages for Acados solver generation
+numpy==1.17.4
+PyYAML==5.3.1
+oyaml==0.9
+rospkg==1.2.3
+casadi==3.5.5
+
+# Plotting tools
+matplotlib==3.1.1
+matplotlib2tikz==0.7.6
+tikzplotlib==0.8.5

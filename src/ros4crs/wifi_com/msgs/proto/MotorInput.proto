@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+message MotorInput {
+    /* Integer in range [-1, 1] that captures direction and percentage of
+        maximum power supplied to an actuator */
+    required float power = 1;
+}

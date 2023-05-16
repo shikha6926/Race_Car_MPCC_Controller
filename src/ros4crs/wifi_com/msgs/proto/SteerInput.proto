@@ -1,0 +1,10 @@
+syntax = "proto2";
+
+message SteerInput {
+    oneof input {
+        // Steering reference provided by an angle, using the car's internal mapping of angles
+        float steer_angle = 1;
+        // Steering reference provided as a voltage, using the car's potentiometer directly
+        uint32 steer_voltage = 2;
+    }
+}

@@ -1,0 +1,9 @@
+lighthouse_calibration_node:
+  # How manny sweeps should be collected for each calibration point.
+  sweeps_per_point: 100
+  # Sensor postions relative to model center. These will be inserted into the calibration output.
+  sensor_pos:
+      value: [[0.035, 0.020, 0.035, 0.020], [0.015, 0.015, -0.015, -0.015]]
+  # Covariance matrix R of the sensor model. This will be inserted into the calibration output.
+  R:
+      value: [[0.000101, 0.0001, 0.0001, 0.0001], [0.0001, 0.000101, 0.0001, 0.0001], [0.0001, 0.0001, 0.000101, 0.0001], [0.0001, 0.0001, 0.0001, 0.000101]]

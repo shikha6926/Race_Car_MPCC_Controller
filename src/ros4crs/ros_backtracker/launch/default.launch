@@ -1,0 +1,34 @@
+<launch>
+
+    <arg name="state_topic"           default="state" />
+    <arg name="collision_topic"       default="collision" />
+    <arg name="controller_topic"      default="control_input" />
+    <arg name="emergency_input_topic" default="emergency_input" />
+    <arg name="output_topic"          default="filtered_input" />
+
+    <arg name="backtracker_config" default="$(find ros_backtracker)/config/linear_backtrack_config.yaml" />
+
+    <rosparam command="load" file="$(arg backtracker_config)" />
+
+    <node pkg="ros_backtracker" name="crash_detector_node" type="crash_detector_node" output="screen" launch-prefix="bash -c 'sleep 6; $0 $@' ">
+
+        <remap from="state" to="$(arg state_topic)" />
+        <remap from="~/collision" to="$(arg collision_topic)" />
+    </node>
+
+
+    <node pkg="ros_backtracker" name="input_filter_node" type="input_filter_node" output="screen">
+
+        <remap from="control_input" to="$(arg output_topic)" />
+        <remap from="~/regular_input" to="$(arg controller_topic)" />
+        <remap from="~/emergency_input" to="$(arg emergency_input_topic)" />
+    </node>
+
+    <node pkg="ros_backtracker" name="linear_backtracker_node" type="linear_backtracker_node" output="screen">
+
+        <remap from="~/control_input" to="$(arg emergency_input_topic)" />
+        <remap from="~/state" to="$(arg state_topic)" />
+        <remap from="~/collision" to="$(arg collision_topic)" />
+    </node>
+
+</launch>

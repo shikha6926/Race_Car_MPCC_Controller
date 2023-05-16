@@ -1,0 +1,27 @@
+# Description of configuration files can be found at "https://gitlab.ethz.ch/ics-group/projects/andrea/crs-2.0/-/wikis/ros-configuration"
+
+# ============ THIS IS THE GROUND TRUTH MODEL FOR SIMULATION ============ 
+# If using ros, paramaters located at /model
+
+# type describes what type of model we want to use / should be loaded
+type: "kinematic_model"
+
+# Q (process noise covariance matrix)
+Q:
+  value:
+    [
+      [0.01, 0, 0, 0, 0, 0],
+      [0, 0.01, 0, 0, 0, 0],
+      [0, 0, 0.01, 0, 0, 0],
+      [0, 0, 0, 0.0001, 0, 0],
+      [0, 0, 0, 0, 0.0001, 0],
+      [0, 0, 0, 0, 0, 0.0001],
+    ] 
+  is_diag: false
+
+model_params:
+  # size params
+  lr: 0.038
+  lf: 0.052
+  
+  tau: 0.181

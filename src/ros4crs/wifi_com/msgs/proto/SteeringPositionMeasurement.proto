@@ -1,0 +1,12 @@
+syntax = "proto2";
+
+message SteeringPositionMeasurement {
+    /* Current steering angle in radians */
+    required float steer_rad = 1;
+    /* Current ADC measurement */
+    required int32 adc_meas = 2;
+    /* First two bytes: int16 with lower limit, second two bytes: int16 with upper limit*/
+    optional int32 adc_limits = 3;
+    /* Amplitude of the steering in radians */
+    optional float amplitude = 4;
+}

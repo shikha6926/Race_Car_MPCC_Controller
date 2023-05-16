@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ros_crs_utils</name>
+  <version>0.0.1</version>
+  <description>TODO </description>
+
+  <author email="sabodmer@ethz.ch">Sabrina Bodmer</author>
+  <maintainer email="sabodmer@ethz.ch">Sabrina Bodmer</maintainer>
+
+  <license>BSD 2-Clause </license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin_simple</buildtool_depend>
+  <depend>roscpp</depend>
+
+  <depend>crs_msgs</depend>
+  <depend>dynamic_models</depend>
+  <depend>controls</depend>
+  <depend>commons</depend>
+  <depend>planning</depend> 
+
+  
+  <!-- Optional Dependencies -->
+  <depend>lowpass_estimator</depend>
+  <depend>pacejka_model</depend>
+  <depend>kinematic_model</depend> 
+  <depend>pid_controller</depend>
+  <depend>ff_fb_controller</depend>
+  <depend>mpc_controller</depend> 
+  <depend>pacejka_mpc_safety_filter</depend> 
+  
+
+  <export></export>
+</package>

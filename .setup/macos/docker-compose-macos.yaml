@@ -1,0 +1,20 @@
+version: '3'
+name: "crs"
+services:
+  crs:
+    image: registry.ethz.ch/ics/crs:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crs
+    volumes:
+      - .:/code
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    env_file:
+      - .display
+    expose:
+      - "20210-20230/udp"
+      - "33300-33400/udp"
+    ports:
+      - "20210-20230:20210-20230/udp"
+      - "33300-33400:33300-33400/udp"

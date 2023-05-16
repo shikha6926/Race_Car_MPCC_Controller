@@ -1,0 +1,17 @@
+<launch>
+
+    <arg name="car_state_topic" default="controller_node/state" doc="Topic where state of the car is published." />
+    <arg name="car_input_topic" default="controller_node/control_input" doc="Topic where input from the  car is published." />
+    <arg name="controller_config_file" default="$(find ros_controllers)/config/ff_fb_controller.yaml" doc="Path to controller config .yaml file" />
+    <arg name="start_delay" default="4" doc = "Time delay in (s) until the controller is spawned." />
+
+    <arg name="visualizer_topic" default="controller_node/controller_visualization" />
+    <node pkg="ros_controllers" name="controller_node" type="controller_node" output="screen" launch-prefix="bash -c 'sleep $(arg start_delay); $0 $@' ">
+        <rosparam command="load" file="$(arg controller_config_file)" />
+
+        <remap from="controller_node/state" to="$(arg car_state_topic)" />
+        <remap from="controller_node/control_input" to="$(arg car_input_topic)" />
+        <remap from="controller_node/visualizer/controller_visualization" to="$(arg visualizer_topic)" />
+    </node>
+
+</launch>

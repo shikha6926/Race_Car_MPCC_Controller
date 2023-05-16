@@ -1,0 +1,21 @@
+# Description of configuration files can be found at "https://gitlab.ethz.ch/ics-group/projects/andrea/crs-2.0/-/wikis/ros-configuration"
+
+state_type: pacejka_car
+input_type: pacejka_car
+
+sensors:
+  sensor_names: ["vicon"]
+  vicon:
+    R:
+      value: [[0], [0], [0]]
+      is_diag: true
+    frequency: 200 # Hz
+    key: vicon # optional, if not set us e name of sensor
+    measurement_noise:
+      type: multivariate_gaussian
+    delay: 0.0      
+
+initial_state: [0.15, -1.05, 0, 0.2, 0, 0]
+initial_input: [0.0, 0.2]
+
+frequency: 200 #Hz, speed of simulator

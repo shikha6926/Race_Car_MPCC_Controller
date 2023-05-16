@@ -1,0 +1,5 @@
+battery_monitor_node:
+  # Rate at which warnings about low battery should be issued [Hz].
+  rate: 0.2
+  # Threshold below which warnings about low battery are issued [V].
+  threshold: 4.4

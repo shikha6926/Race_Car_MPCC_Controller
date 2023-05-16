@@ -1,0 +1,6 @@
+syntax = "proto2";
+
+message Ping {
+    /* Whether the ping message should be echoed. */
+    required bool should_bounce = 1;
+}

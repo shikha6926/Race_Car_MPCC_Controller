@@ -1,0 +1,24 @@
+syntax = "proto2";
+
+import "BatteryState.proto";
+import "SingleControlInput.proto";
+import "IMUMeasurement.proto";
+import "Lighthouse.proto";
+import "MotorInput.proto";
+import "SteeringPositionMeasurement.proto";
+import "WheelSpeedMeasurement.proto";
+
+message CarState {
+    required SingleControlInput current_reference = 1;
+    required MotorInput drive_motor_input = 2;
+    required MotorInput steer_motor_input = 3;
+    required IMUMeasurement imu_data = 4;
+    required SteeringPositionMeasurement steer_data = 5;
+    
+    /** Optional for backward compatibility with non-updated models. */
+    optional WheelSpeedMeasurement wheel_speed_data = 6;
+    optional BatteryState battery_state = 7;
+
+    repeated LighthouseFrame lighthouse_data = 8;
+    repeated LighthouseSweep lighthouse_sweeps = 9;
+}

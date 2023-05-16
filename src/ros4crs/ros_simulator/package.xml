@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ros_simulator</name>
+  <version>0.0.1</version>
+  <description>TODO </description>
+
+  <author email="sabodmer@ethz.ch">Sabrina Bodmer</author>
+  <maintainer email="sabodmer@ethz.ch">Sabrina Bodmer</maintainer>
+
+  <license>BSD 2-Clause </license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin_simple</buildtool_depend>
+  <depend>roscpp</depend>
+
+  <depend>dynamic_models</depend>
+  <depend>sensor_models</depend>
+  <depend>ros_crs_utils</depend>
+  <depend>crs_msgs</depend>
+  <depend>message_filters</depend>
+  <depend>commons</depend>
+
+  <!-- Optional Dependencies -->
+  <depend>pacejka_model</depend>
+  <depend>pacejka_sensor_model</depend>
+  <depend>kinematic_model</depend>
+  <depend>kinematic_sensor_model</depend>
+
+  <export></export>
+</package>

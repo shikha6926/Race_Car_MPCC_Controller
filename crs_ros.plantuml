@@ -1,0 +1,210 @@
+@startuml
+
+frame "ROS" {
+  package "ros_controllers" {
+    abstract class BaseControllerVisualizer<StateType, InputType> {
+      - BaseController<StateType, InputType> controller_
+      {abstract} void visualizationCallback(ros::TimerEvent event)
+    }
+
+    abstract class BaseController #line.dashed:blue
+    {
+      {abstract} InputType getControlInput(StateType state)
+      {abstract} bool isIinitializing()
+    }
+
+    class LastReferencePointVisualizer {
+       + void visualizationCallback(ros::TimerEvent event)
+    }
+
+    class MpcControllerVisualizer {
+       + void visualizationCallback(ros::TimerEvent event)
+    }
+
+    BaseControllerVisualizer <-- LastReferencePointVisualizer
+    BaseControllerVisualizer <-- MpcControllerVisualizer
+
+    class RosController<StateMsg, InputMsg, StateType, InputType> {
+      - BaseControllerVisualizer<StateType, InputType> visualizer_
+      - BaseController<StateType, InputType> controller_
+      + void stateCallback(StateMsg msg)
+    }
+    class JoystickController {
+        + void joystickCallback(const sensor_msgs::Joy::ConstPtr joy)
+    }
+
+    RosController o-- BaseController
+    RosController o-- BaseControllerVisualizer
+  }
+
+  package "ros_estimators" {
+    abstract class RosStateEstimator {
+      {abstract} void publishState()
+    }
+
+    abstract class DiscreteEkfRos<StateType, InputType, StateDimension, InputDimension>
+    {
+      - DiscreteEKF<StateType, InputType, StateDimension, InputDimension> ekf_
+      {abstract} void publishState()
+      {abstract} void controlInputCallback(const InputType& input, double timestamp)
+      {abstract} void measurementCallback(const measurement& measurement)
+    }
+
+
+    class KinematicDiscreteEkfRos {
+        + void controlInputCallback(crs_msgs::car_input input_msg)
+        + void viconMeasurementCallback(geometry_msgs::TransformStamped msg)
+        + void imuMeasurementCallback(sensor_msgs::Imu msg)
+        + void publishState()
+    }
+
+    class PacejkaDiscreteEkfRos {
+        + void controlInputCallback(crs_msgs::car_input input_msg)
+        + void viconMeasurementCallback(geometry_msgs::TransformStamped msg)
+        + void imuMeasurementCallback(sensor_msgs::Imu msg)
+        + void publishState()
+    }
+
+    struct measurement #line.dashed:blue
+    {
+      + string key
+      + Vector measurement_data
+      + double timstamp
+    }
+
+    class DiscreteEKF<StateType, InputType, StateDimension, InputDimension> #line.dashed:blue
+    {
+       - StateType best_state
+       - DiscreteDynamicModel<StateType, InputType, InputDimension> discrete_model 
+       + Map<string, SensorModel> key_to_sensor_model
+
+       + void controlInputCallback(InputType input, double timestamp)
+       + void measurementCallback(measurement measurement)
+
+       + void predict(InputType input, double timestep)
+       + void measurementUpdate(measurement data)
+       + StateType getStateEstimate()
+
+    }
+
+    class PacejkaLowpassEstimator_ {
+      - LowpassEstimator estimator
+      void viconMeasurementCallback(const geometry_msgs::TransformStamped::ConstPtr msg);
+      void publishState() override;
+
+    }
+    class PacejkaLowpassEstimator<pacejka_car_state>  #line.dashed:blue
+    {
+       + pacejka_car_state best_state
+
+       + void measurementUpdate(measurement data)
+       + pacejka_car_state getStateEstimate()
+
+    }
+    RosStateEstimator <-- DiscreteEkfRos
+    DiscreteEkfRos <-- PacejkaDiscreteEkfRos
+    DiscreteEkfRos <-- KinematicDiscreteEkfRos
+    DiscreteEkfRos o- measurement
+    DiscreteEkfRos o- DiscreteEKF
+    PacejkaLowpassEstimator_ o- PacejkaLowpassEstimator
+    RosStateEstimator <-- PacejkaLowpassEstimator_
+  }
+
+  package "ros_simulator" {
+
+    abstract class Simulator {
+     + {abstract} void advanceState(double timestep)
+     + {abstract} void publishStates()
+     + {abstract} void publishMeasurement(string key)
+     + {abstract} void registerNoiseModel(NoiseModel noise_model)
+     + {abstract} void printConfig()
+     + void addMeasurementNoise(string measurement_name, NoiseModel noise_model)
+    }
+
+    abstract class NoiseModel {
+     + {abstract} Vector sampleNoiseFromCovMatrix(Matrix cov_mat)
+    }
+    class GaussianNoiseModel {
+     + Vector sampleNoiseFromCovMatrix(Matrix cov_mat)
+    }
+
+
+    class DiscretePacejkaModel<pacejka_car_state, pacejka_car_input, 6, 2> #line.dashed:blue
+    {
+      + ContinuousPacejkaModel<pacejka_car_state, pacejka_car_input, 6, 2> cont_model 
+      + pacejka_car_state applyModel(pacejka_car_state state, pacejka_car_input control_input)
+    }
+
+    class DiscreteKineamticModel<kinematic_car_state, kinematic_car_input, 4, 2>  #line.dashed:blue
+    {
+      + ContinuousKinematicModel<kinematic_car_state, kinematic_car_input, 4, 2> cont_model 
+      + kinematic_car_state applyModel(kinematic_car_state state, kinematic_car_input control_input)
+    }
+
+
+
+    NoiseModel <-- GaussianNoiseModel
+    Simulator o-- NoiseModel
+
+    class KinematicSimulator {
+     + void advanceState(double timestep)
+     + void publishStates()
+     + void publishMeasurement(string key)
+     + void registerNoiseModel(NoiseModel noise_model)
+     + void printConfig()
+    }
+
+    class PacejkaSimulator {
+     + void advanceState(double timestep)
+     + void publishStates()
+     + void publishMeasurement(string key)
+     + void registerNoiseModel(NoiseModel noise_model)
+     + void printConfig()
+    }
+    Simulator <-- PacejkaSimulator
+    Simulator <-- KinematicSimulator
+    KinematicSimulator o-- DiscreteKineamticModel
+    PacejkaSimulator o-- DiscretePacejkaModel
+  }
+
+
+  package "ros_safety" {
+    class RosSafetyFilter<StateType, InputType, StateMsg, InputMsg> {
+      - SafetyFilter<StateType, InputType> safety_filter_
+       void stateInputCallback(StateMsg, InputMsg)
+    }
+
+    abstract class SafetyFilter<StateType, InputType> #line.dashed:blue
+    {
+      {abstract} InputType getSafeControlInput(const StateType state, const InputType control_input)
+    }
+
+    RosSafetyFilter o-- SafetyFilter
+  }
+
+
+  package "ros_planners" {
+    class RosPlanner<StateMsg, StateType, ReferenceType> {
+      - BasePlanner<ReferenceType, StateType> planner_;
+      + void stateCallback(StateMsg state)
+      + void trajectoryFinishedCallback(bool finished)
+    }
+
+    class RosMultiAgentRosPlanner<StateMsg, StateType, ReferenceType> {
+      - BasePlanner<ReferenceType, map<string, StateType>> planner_;
+      + void stateCallback(map<string, StateMsg> state)
+      + void trajectoryFinishedCallback(bool finished)
+    }
+
+    abstract class BasePlanner<ReferenceType, StateType> #line.dashed:blue
+    {
+      {abstract} vector<ReferenceType> getPlannedTrajectory(StateType state, double timestamp)
+      {abstract} bool goalReached(StateType state, vector<ReferenceType> trajectory)
+    }
+
+    RosPlanner o-- BasePlanner
+    RosMultiAgentRosPlanner o-- BasePlanner
+  }
+
+}
+@enduml

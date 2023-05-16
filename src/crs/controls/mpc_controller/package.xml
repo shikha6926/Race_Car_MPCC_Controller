@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mpc_controller</name>
+  <version>0.0.1</version>
+  <description> MPC Controller package </description>
+
+  <author email="zrene@ethz.ch">René Zurbrügg</author>
+  <maintainer email="zrene@ethz.ch">René Zurbrügg</maintainer>
+
+  <license>BSD 2-Clause </license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin_simple</buildtool_depend>
+
+  <!-- Track Manager and Filter -->
+  <depend>commons</depend>
+  <!-- Base abstract control classes -->
+  <depend>controls</depend>
+
+  <depend>mpc_solvers</depend>
+
+
+  <!-- Optional -->
+  <depend>acados_pacejka_mpcc_solver</depend>
+  <depend>acados_pacejka_tracking_mpc_solver</depend>
+
+  <export></export>
+</package>

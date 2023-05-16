@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="model_config" default="$(find pacejka_model)/config/model_params.yaml" />
+    <group ns="model">
+        <rosparam command="load" file="$(arg model_config)" />
+    </group>
+
+    <node pkg="ros_estimators" name="estimation_node" type="ros_estimation_node" output="screen">
+        <rosparam command="load" file="$(find ros_estimators)/config/pacejka_car_ekf.yaml" />
+        <remap from="control_input" to="ros_simulator/control_input" />
+        <remap from="vicon" to="ros_simulator/vicon" />
+
+
+        <param name="world_frame" type="str" value="world"></param>
+        <param name="track_frame" type="str" value="world"></param>
+        <param name="update_track_transform" type="bool" value="true"></param>
+    </node>
+
+
+    <test pkg="ros_estimators" test-name="test_node" type="test_node" />
+</launch>

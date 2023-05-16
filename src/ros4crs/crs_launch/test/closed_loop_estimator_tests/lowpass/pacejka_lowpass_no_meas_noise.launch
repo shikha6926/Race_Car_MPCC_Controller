@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>
+
+    <include file="$(find crs_launch)/launch/sim_single_car.launch">
+        <arg name = "copy_config"          value = "false"/>
+        <arg name = "namespace"            value = "test_car" />
+        <arg name = "model_config"         value = "$(find crs_launch)/test/config/models/model.yaml"/>
+        <arg name = "simulator_config"     value = "$(find crs_launch)/test/config/simulators/pacejka/no_Q_no_R.yaml"/>
+        <arg name = "controller_config"    value = "$(find crs_launch)/test/config/controllers/pid_controller.yaml"/>
+        <arg name = "estimator_config"     value = "$(find crs_launch)/test/config/estimators/pacejka/lowpass.yaml"/>
+        <arg name = "view_rviz"            value = "false"/>
+    </include>
+
+    
+    <group ns="test_car">
+        <param name="n_estimates" type="int" value="500"/>
+        <param name="n_transient" type="int" value="10"/>
+        
+        <param name="x_precision" type="double" value="0.02"/>
+        <param name="y_precision" type="double" value="0.03"/>
+        <param name="yaw_precision" type="double" value="0.3"/>
+        <param name="vx_precision" type="double" value="0.5"/>
+        <param name="vy_precision" type="double" value="0.5"/>
+        <param name="dyaw_precision" type="double" value="10"/>
+
+    <test pkg="crs_launch" test-name="pacejka_lowpass_no_meas_noise" type="pacejka_lowpass_no_meas_noise"/>
+</group>
+
+
+</launch>

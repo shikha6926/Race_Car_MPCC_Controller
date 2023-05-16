@@ -1,0 +1,29 @@
+<launch>
+
+
+    <!-- Load the track configuration into the /track parameters. -->
+    <rosparam command="load" file="$(find track_generation)/tracks/DEMO_TRACK.yaml" />
+
+
+    <arg name="model_config" default="$(find pacejka_model)/config/model_params.yaml" />
+
+    <!-- Load the track configuration into the /track parameters. -->
+    <rosparam command="load" file="$(find track_generation)/tracks/DEMO_TRACK.yaml" />
+
+    <!-- Load the Model -->
+    <group ns="model">
+        <rosparam command="load" file="$(arg model_config)" />
+    </group>
+
+    <arg name="car_state_topic" default="controller_node/state" doc="Topic where state of the car is published." />
+    <arg name="car_input_topic" default="controller_node/control_input" doc="Topic where input from the  car is published." />
+    <arg name="controller_config_file" default="$(find ros_controllers)/config/mpc_controller.yaml" doc="Path to controller config .yaml file" />
+
+    <node pkg="ros_controllers" name="controller_node" type="controller_node" output="screen">
+        <rosparam command="load" file="$(arg controller_config_file)" />
+
+        <remap from="controller_node/state" to="$(arg car_state_topic)" />
+        <remap from="controller_node/control_input" to="$(arg car_input_topic)" />
+    </node>
+
+</launch>

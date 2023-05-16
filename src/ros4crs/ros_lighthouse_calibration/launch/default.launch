@@ -1,0 +1,7 @@
+<launch>
+
+    <rosparam command="load" file="$(find ros_lighthouse_calibration)/config/lighthouse_calibration_config.yaml"/>
+    <node pkg="ros_lighthouse_calibration" name="lighthouse_calibration_node" type="lighthouse_calibration_node" output="screen">
+    </node>
+
+</launch>

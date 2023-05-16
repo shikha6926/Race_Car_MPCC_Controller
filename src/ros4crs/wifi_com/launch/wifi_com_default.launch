@@ -1,0 +1,6 @@
+<launch>
+
+    <rosparam command="load" file="$(find wifi_com)/config/wifi_com.yaml"/>
+    <node pkg="wifi_com" name="wifi_com_node" type="wifi_com_node" output="screen"/>
+
+</launch>

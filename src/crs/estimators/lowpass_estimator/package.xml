@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>lowpass_estimator</name>
+  <version>0.0.1</version>
+  <description>TODO </description>
+
+  <author email="zrene@ethz.ch">René Zurbrügg</author>
+  <maintainer email="zrene@ethz.ch">René Zurbrügg</maintainer>
+
+  <license>BSD 2-Clause </license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin_simple</buildtool_depend>
+
+  <depend>dynamic_models</depend>
+  <depend>pacejka_model</depend>
+  <depend>commons</depend>
+  <depend>sensor_models</depend>
+  <depend>tf</depend>
+  <depend>estimators</depend>
+
+
+  <export></export>
+</package>

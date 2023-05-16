@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>controls</name>
+  <version>0.0.1</version>
+  <description>Base controls package of the CRS framework. Contains the main abstract classes used to implement controllers</description>
+
+  <author email="zrene@ethz.ch">René Zurbrügg</author>
+  <maintainer email="zrene@ethz.ch">René Zurbrügg</maintainer>
+
+  <license>BSD 2-Clause </license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin_simple</buildtool_depend>
+
+  <export></export>
+</package>

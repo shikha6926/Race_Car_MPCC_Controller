@@ -1,0 +1,19 @@
+<launch>
+    <arg name="gt_car_state_topic" default="car_state" doc="Topic where state of the car is published." />
+    <arg name="est_car_state_topic" default="car_state_est" doc="Topic where state of the car is published." />
+
+    <arg name="visualizer_config" default="$(find car_track_visualizer)/config/car_track_visualizer.yaml" />
+
+    <arg name="namespace" default="car" />
+    <arg name="output_topic" default="/track_info" />
+
+    <node pkg="car_track_visualizer" name="car_track_visualizer_node" type="car_track_visualizer_node" output="screen">
+        <rosparam command="load" file="$(arg visualizer_config)" />
+        <remap from="car_track_visualizer_node/car_state_est" to="$(arg est_car_state_topic)" />
+        <remap from="car_track_visualizer_node/car_state_gt" to="$(arg gt_car_state_topic)" />
+
+        <remap from="track_info" to="$(arg output_topic)" />
+        <param name="car_namespace" value="$(arg namespace)" />
+    </node>
+
+</launch>

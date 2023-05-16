@@ -1,0 +1,8 @@
+syntax = "proto2";
+
+import "Vector3.proto";
+
+message IMUMeasurement {
+    required Vector3 linear_acceleration = 1;
+    required Vector3 angular_velocity = 2;
+}

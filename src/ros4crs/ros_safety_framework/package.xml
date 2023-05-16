@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ros_safety_framework</name>
+  <version>0.0.1</version>
+  <description>TODO </description>
+
+  <author email="zrene@ethz.ch">René Zurbrügg</author>
+  <maintainer email="zrene@ethz.ch">René Zurbrügg</maintainer>
+
+  <license>BSD 2-Clause </license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin_simple</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>crs_msgs</depend>
+  <depend>ros_crs_utils</depend>
+  <depend>commons</depend>
+  <depend>safety_framework</depend>
+  <depend>collision_avoider</depend>
+  <depend>message_filters</depend>
+
+  <!-- Optional Dependencies -->
+  <depend>pacejka_model</depend>
+  <depend>pacejka_mpc_safety_filter</depend>
+
+</package>

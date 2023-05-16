@@ -1,0 +1,22 @@
+<launch>
+
+<rosparam command="load" file="$(find track_generation)/tracks/DEMO_TRACK.yaml"/> 
+
+
+<node pkg="car_track_visualizer" name="car_track_visualizer_node" type="car_track_visualizer_node" output="screen">
+<rosparam command="load" file="$(find car_track_visualizer)/config/car_track_visualizer.yaml"/>
+</node>
+
+
+
+
+<node pkg="rviz" name="rviz" type="rviz" args="-d $(find car_track_visualizer)/config/single_car.rviz" />
+
+
+<!-- 
+<node name = "PlotJuggler" pkg = "plotjuggler" type = "PlotJuggler" 
+args="-s-layout $(find crs_launch)/../visualizer/car/$(arg visualizer_package)/config/sim_single_car_plots.xml"
+if="$(arg view_plots)"/>
+ -->
+
+</launch>

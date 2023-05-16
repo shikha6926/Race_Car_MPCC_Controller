@@ -1,0 +1,16 @@
+<launch>
+
+    <arg name = "world_frame"       default = "world" />
+    
+    <include file = "$(find mocap_qualisys)/launch/qualisys.launch">
+        <!-- IP address or local hostname of PC running Qualisys Track Manager. -->
+        <arg name = "server_address" default = "192.168.1.158" />
+        <!-- Port of the local machine QTM will send the data to.
+            Make sure it is exposed in Docker! Default exposed range is 33300-33400 -->
+        <arg name="udp_port" default="33333" />
+
+        <!-- TODO: analyze exactly what frame this is -->
+        <arg name="fixed_frame_id" default="/$(arg world_frame)" />
+    </include>
+
+</launch>

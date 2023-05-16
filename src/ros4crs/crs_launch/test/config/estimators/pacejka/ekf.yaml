@@ -1,0 +1,28 @@
+# Description of configuration files can be found at "https://gitlab.ethz.ch/ics-group/projects/andrea/crs-2.0/-/wikis/ros-configuration"
+type: "discrete_ekf"
+pub_rate: 50.0 # Hz
+
+# initial state
+initial_state:
+  type: "pacejka_car"
+  value: [0.15, -1.05, 0, 0.5, 0, 0]
+
+initial_input:
+  type: "pacejka_car"
+  value: [0.0, 0.1]
+
+# initial P (state covariance matrix)
+P_init:
+  value: [[1],[1],[1],[1],[1],[1]]
+  is_diag: true
+
+max_callback_rate: 200
+
+sensors:
+  sensor_names: ["vicon"]
+  vicon:
+    R:
+      value: [[0.001], [0.001], [0.001]]
+      is_diag: true
+    key: vicon # optional, if not set us e name of sensor
+  

@@ -1,0 +1,156 @@
+<launch>
+    <!--
+        Starts main crs components which are shared regardless of simulation or real world experiment setup
+    -->
+    
+    <!-- =================================================================
+                         Important Input Arguments
+         ================================================================= -->
+
+    <arg name = "namespace"           default = "car_1"       doc = "Namespace of all the nodes. Use this to launch different cars. "/>
+    <arg name = "view_rviz"           default = "true"        doc = "If true, starts an rviz node for visualization "/>
+    <arg name = "use_backtracker"     default = "false"       doc = "If true, uses a backtracker as defined in the backtracker.yaml config to recover from crashes "/>
+
+    <arg name = "track_name"          default = "DEMO_TRACK"  doc = "Name of the track that should be loaded. "/>
+    <!-- Recording arguments  -->
+    <arg name = "copy_config"         default = "true"        doc = "if true, backs up all .yaml configurations on execution" />
+    <arg name = "record_bag"          default = "false"       doc = "if true, recoard a .bag file with all topics"/>
+    <arg name = "run_type"            default = "sim"         doc = "Type of this run (real / sim )" />
+
+    <arg name = "use_safety_filter"   default = "false"       doc = "if true, loads safety filter" />
+    <arg name = "launch_planner"      default = "true"/>
+
+    <!-- =================================================================
+                        Remap Topics Argument
+         ================================================================= -->
+
+    <arg name = "control_state_topic" default = "estimation_node/best_state"/>
+    <arg name = "control_input_topic" default = "control_input"/>
+    <arg name = "vicon_topic"         default = "vicon"/>
+    <arg name = "imu_topic"           default = "imu"/>
+    <arg name = "world_frame"         default = "world"/>
+    <arg name = "track_frame"         default = "world"/>
+
+    <arg name = "safety_control_input_topic" default = "safety_control_input"/>
+    <!-- =================================================================
+                         Configuration Yaml Files 
+         ================================================================= -->
+
+    <arg name = "model_config"          default = "$(find pacejka_model)/config/model_params.yaml" />
+    <arg name = "simulator_config"      default = "$(find ros_simulator)/config/pacejka_car_simulator.yaml" />
+    <arg name = "controller_config"     default = "$(find ros_controllers)/config/mpc_controller.yaml" />
+    <arg name = "visualizer_config"     default = "$(find car_track_visualizer)/config/car_track_visualizer.yaml" />
+    <arg name = "backtracker_config"    default = "$(find ros_backtracker)/config/linear_backtrack_config.yaml" />
+    <arg name = "estimator_config"      default = "$(find ros_estimators)/config/pacejka_car_ekf.yaml" />
+    <arg name = "safety_filter_config"  default = "$(find ros_safety_framework)/config/collision_avoidance.yaml" />
+
+    <arg name = "disable_estimator"     default = "false" />
+    <arg name ="controller_start_delay" default = "4" doc = "Time delay in (s) until the controller is spawned." />
+
+    <!-- ==============================================================
+                               Start Nodes
+         ==============================================================  -->
+
+    <group ns = "$(arg namespace)">
+        <!-- Load the track configuration into the /track parameters. -->
+        <rosparam command = "load" file = "$(find track_generation)/tracks/$(arg track_name).yaml" />
+
+        <!-- Load the Model -->
+        <group ns = "model">
+            <rosparam command = "load" file = "$(arg model_config)" />
+        </group>
+
+        <!-- ==============================================================
+                               Controller Node
+             ===============================================================     -->
+        <include file = "$(find ros_controllers)/launch/default.launch">
+            <arg name = "controller_config_file" value = "$(arg controller_config)" />
+            <arg name = "car_state_topic"        value = "$(arg control_state_topic)" />
+            <arg name = "visualizer_topic"       value = "/controller_visualization" />
+            <arg name = "start_delay"            value = "$(arg controller_start_delay)" />
+
+            <arg name = "car_input_topic"        value = "$(arg safety_control_input_topic)"  if = "$(eval use_safety_filter == true)" />
+            <arg name = "car_input_topic"        value = "control_input_raw"                  if = "$(eval (use_safety_filter == false) and (use_backtracker == true))" />
+            <arg name = "car_input_topic"        value = "$(arg control_input_topic)"         if = "$(eval (use_safety_filter == false) and (use_backtracker == false))" />
+        </include>
+
+        <!-- ==============================================================
+                               Estimation Node
+             ===============================================================     -->
+        <group unless = "$(arg disable_estimator)">
+            <include file = "$(find ros_estimators)/launch/default.launch">
+                <arg name = "estimator_config"   value = "$(arg estimator_config)" />
+                <arg name = "input_topic"        value = "$(arg control_input_topic)" />
+                <arg name = "vicon_topic"        value = "$(arg vicon_topic)" />
+                <arg name = "imu_topic"          value = "$(arg imu_topic)" />
+                <arg name = "world_frame"        value = "$(arg world_frame)" />
+                <arg name = "track_frame"        value = "$(arg track_frame)" />
+                
+            </include>
+        </group>
+
+        <!-- ==============================================================
+                               Planner Node
+             ===============================================================     -->
+        <group if = "$(arg launch_planner)">
+            <!-- Start Backtracker Node -->
+            <include file = "$(find ros_planners)/launch/default.launch">
+                <arg name = "car_state_topic"        value = "$(arg control_state_topic)" />
+                <arg name = "trajectory_topic"   value = "trajectory" />
+            </include>
+        </group>
+
+
+
+        <!-- ==============================================================
+                               Safety Filter Node
+             ===============================================================     -->
+        <group if = "$(arg use_safety_filter)">
+            <!-- Start Backtracker Node -->
+            <include file = "$(find ros_safety_framework)/launch/default.launch">
+                <arg name = "car_state_topic"        value = "$(arg control_state_topic)" />
+                <arg name = "car_input_topic"        value = "$(arg safety_control_input_topic)" />
+                <arg name ="safety_filter_config"    value = "$(arg safety_filter_config)" />
+
+                <arg name = "safe_car_input_topic"   value = "control_input_raw"           if     = "$(arg use_backtracker)" />
+                <arg name = "safe_car_input_topic"   value = "$(arg control_input_topic)"  unless = "$(arg use_backtracker) " /> 
+
+            </include>
+        </group>
+
+        
+
+        <!-- ==============================================================
+                               Visualization Node
+             ==============================================================     -->
+        <include file = "$(find car_track_visualizer)/launch/default.launch">
+            <arg name = "visualizer_config"   value = "$(arg visualizer_config)" />
+            <arg name = "namespace"           value = "$(arg namespace)" />
+            <arg name = "gt_car_state_topic"  value = "ros_simulator/gt_state" />
+            <arg name = "est_car_state_topic" value = "estimation_node/best_state" />
+            <arg name = "output_topic"        value = "/track_info" />
+        </include>
+        
+        <!-- ==============================================================
+                               [Optional] Backtracker Node
+             ==============================================================   -->
+        <group if = "$(arg use_backtracker)">
+            <!-- Start Backtracker Node -->
+            <include file = "$(find ros_backtracker)/launch/default.launch">
+                <arg name = "backtracker_config" value = "$(arg backtracker_config)" />
+                <arg name = "state_topic"        value = "$(arg control_state_topic)" />
+                <arg name = "controller_topic"   value = "control_input_raw" />
+                <arg name = "output_topic"       value = "$(arg control_input_topic)" />
+            </include>
+        </group>
+
+        <node pkg="crs_launch" type="save_and_record.sh" name="saveconfig_sim" 
+              args="record=$(arg record_bag) type=$(arg run_type) $(arg model_config) $(arg simulator_config) $(arg controller_config) $(arg visualizer_config) $(arg backtracker_config) $(arg estimator_config)"  
+              output="screen" if = "$(arg copy_config)"/>
+    </group>
+
+	
+    <node pkg = "rviz" name = "rviz" type = "rviz" args = "-d $(find car_track_visualizer)/config/single_car.rviz" if = "$(arg view_rviz)" />
+
+</launch>
+    

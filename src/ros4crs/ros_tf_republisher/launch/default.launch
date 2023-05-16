@@ -1,0 +1,18 @@
+<launch>
+
+    <!-- The source and the target frame of the transformation this node should listen to -->
+    <arg name = "target_frame"          default = "world" />
+    <arg name = "source_frame" />
+
+    <!-- Output topic where the frames are republished -->
+    <arg name = "target_topic"          default = "mocap/$(arg source_frame)" />
+
+    <node pkg="ros_tf_republisher" name="republisher_node_$(arg source_frame)" type="republisher_node" output="screen">
+        <remap from="mocap" to="$(arg target_topic)" />
+        
+        <param name = "target_frame" value = "$(arg target_frame)" />
+        <param name = "source_frame" value = "$(arg source_frame)" />
+        <param name = "target_topic" value = "$(arg target_topic)" />        
+    </node>
+
+</launch>

@@ -1,0 +1,48 @@
+# Description of configuration files can be found at "https://gitlab.ethz.ch/ics-group/projects/andrea/crs-2.0/-/wikis/ros-configuration"
+type: "discrete_ekf"
+pub_rate: 100.0 # Hz
+
+# initial state
+initial_state:
+  type: "kinematic_car"
+  value: [0.15, -1.05, 0, 0.5]
+
+initial_input:
+  type: "kinematic_car"
+  value: [0, 0.1]
+
+max_callback_rate: 200
+
+# initial P (state covariance matrix)
+P_init:
+  value: [[1],[1],[1],[1]]
+  is_diag: true
+
+sensors:
+  sensor_names: ["vicon"]
+  vicon:
+    R:
+      value: [[0.001], [0.001], [0.001]]
+      is_diag: true
+    key: vicon # optional, if not set us e name of sensor
+
+model:
+  Q:
+    value:
+      [
+        [0.01, 0, 0, 0],
+        [0, 0.01, 0, 0],
+        [0, 0, 0.01, 0],
+        [0, 0, 0, 0.0001]
+      ] 
+    is_diag: false
+
+  model_params:
+    # size params
+    lr: 0.038
+    lf: 0.052
+
+    # to make this compatible with kinematic model (can be implicitly downcasted)
+    tau: 0.6 
+    a: 6.44026018
+    b: 0.13732343

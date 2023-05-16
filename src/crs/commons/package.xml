@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>commons</name>
+  <version>0.0.1</version>
+  <description>Commons package of the CRS framework. Contains code that is shared between multiple C++ modules  </description>
+
+  <author email="zrene@ethz.ch">René Zurbrügg</author>
+  <maintainer email="zrene@ethz.ch">René Zurbrügg</maintainer>
+
+  <license>BSD 2-Clause </license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>catkin_simple</buildtool_depend>
+
+  <depend>eigen_catkin</depend>
+  <export></export>
+</package>

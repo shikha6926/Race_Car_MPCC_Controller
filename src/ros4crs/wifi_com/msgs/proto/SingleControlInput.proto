@@ -1,0 +1,9 @@
+syntax = "proto2";
+
+import "SteerInput.proto";
+
+message SingleControlInput {
+    required float torque_ref = 1;
+    required float steer_ref = 2;
+    optional SteerInput steer_input = 3;
+}

@@ -1,0 +1,7 @@
+<launch>
+
+    <rosparam command="load" file="$(find ros_battery_monitor)/config/battery_monitor_config.yaml"/>
+    <node pkg="ros_battery_monitor" name="battery_monitor_node" type="battery_monitor_node" output="screen">
+    </node>
+
+</launch>

@@ -1,0 +1,13 @@
+syntax = "proto2";
+
+import "Ping.proto";
+import "SingleControlInput.proto";
+import "CarState.proto";
+
+message Packet {
+    oneof contents {
+        Ping ping = 1;
+        SingleControlInput control_input = 2;
+        CarState car_state = 3;
+    }
+}
