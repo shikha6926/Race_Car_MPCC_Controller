@@ -157,7 +157,7 @@ void PacejkaMpccController::initialize(crs_models::pacejka_model::pacejka_car_st
                       2 * Y_coef_1[reference_track_index] * distance_on_track + 
                       3 * Y_coef_0[reference_track_index] * std::pow(distance_on_track, 2);  
 
-      double phi = atan2(y_rate , x_rate);
+      double phi = std::atan2(y_rate , x_rate);
       // Update tracking point based on predicted distance on track
       mpc_solvers::pacejka_solvers::trajectory_track_point track_point;
       // track_point.x = getStaticTrack()->operator[](reference_track_index).x();
@@ -278,7 +278,7 @@ crs_models::pacejka_model::pacejka_car_input PacejkaMpccController::getControlIn
                     2 * Y_coef_1[reference_track_index] * distance_on_track + 
                     3 * Y_coef_0[reference_track_index] * std::pow(distance_on_track, 2);   
     track_point.theta = distance_on_track + laps_ * getStaticTrack()->getMaxArcLength();
-    track_point.phi = atan2(track_point.grad_y , track_point.grad_x) + laps_ * 2 * M_PI;
+    track_point.phi = std::atan2(track_point.grad_y , track_point.grad_x) + laps_ * 2 * M_PI;
     // Update reference visualization
     last_solution.reference_on_track_[current_stage] = Eigen::Vector3d(track_point.x, track_point.y, track_point.phi);
 
