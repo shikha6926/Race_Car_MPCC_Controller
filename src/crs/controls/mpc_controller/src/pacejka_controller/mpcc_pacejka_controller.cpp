@@ -1,8 +1,7 @@
 #include <mpc_controller/pacejka_controller/mpcc_pacejka_controller.h>
-//#include <mpc_controller/pacejka_controller/mpcc_pacejka_coef_copy.h>
+#include <mpc_controller/pacejka_controller/mpcc_pacejka_coef_copy.h>
 #include <cmath>
 #include <string>
-#include <mpc_controller/pacejka_controller/GetThetaValue.h>
 #ifdef acados_pacejka_mpcc_solver_FOUND
 #include "acados_pacejka_mpcc_solver/acados_pacejka_mpcc_solver.h"
 #endif
@@ -16,11 +15,14 @@ extern std::vector<double> Y_coef_0;
 extern std::vector<double> Y_coef_1;
 extern std::vector<double> Y_coef_2;
 extern std::vector<double> Y_coef_3;
+extern std::vector<double> X_coords;
+extern std::vector<double> Y_coords;
 
 
 namespace crs_controls
 {
-
+SplineTrajectory Spline_ref(X_coords, Y_coords, X_coef_0, X_coef_1, X_coef_2,  X_coef_3,
+                    Y_coef_0, Y_coef_1, Y_coef_2, Y_coef_3);
 
 void PacejkaMpccController::loadMpcSolver()
 {
@@ -62,11 +64,12 @@ std::vector<std::vector<double>> PacejkaMpccController::getPlannedTrajectory()
   std::vector<std::vector<double>> traj;
   for (int i = 0; i < solver_->getHorizonLength(); i++)
   {
-    // i * solver_->getStateDimension() + pacejka_vars::X -> means [ith state array][0] since X has enum value of 0 
     double x_pos = last_solution.states_[i * solver_->getStateDimension() + pacejka_vars::X];
     double y_pos = last_solution.states_[i * solver_->getStateDimension() + pacejka_vars::Y];
     double vel = std::sqrt(std::pow(last_solution.states_[i * solver_->getStateDimension() + pacejka_vars::VX], 2) +
                            std::pow(last_solution.states_[i * solver_->getStateDimension() + pacejka_vars::VY], 2));
+    // std::cout<< "planned x:"<<x_pos <<"\n";
+    // std::cout<< "planned y:"<<y_pos <<"\n";
     // Append values to trajectory for visualization
     traj.push_back({
         x_pos,                                                                        // Planned x
@@ -96,11 +99,12 @@ void PacejkaMpccController::initialize(crs_models::pacejka_model::pacejka_car_st
   // Initial torque input. Lets use 50% throttle
   last_input_.torque = 0.5;
   // Set initial arc length
-  double theta_static = getStaticTrack()->getArcLength(
+  theta_ = getStaticTrack()->getArcLength(
       getStaticTrack()->getClosestTrackPointIdx(Eigen::Vector2d(state.pos_x, state.pos_y)));
- 
-  int Spline_index = getclosestsplineindex(Eigen::Vector2d(state.pos_x, state.pos_y));
-  theta_ = gettheta(Spline_index, Eigen::Vector2d(state.pos_x, state.pos_y));
+
+  // int Spline_index = Spline_ref.getclosestsplineindex(Eigen::Vector2d(state.pos_x, state.pos_y), Spline_ref);
+  // theta_ = Spline_ref.gettheta(Spline_index, Eigen::Vector2d(state.pos_x, state.pos_y), Spline_ref);
+
   double x_init[9];
   x_init[0] = state.pos_x;
   x_init[1] = state.pos_y;
@@ -125,6 +129,7 @@ void PacejkaMpccController::initialize(crs_models::pacejka_model::pacejka_car_st
 
     // Set initial input (nothing to do, its zero)
   }
+
   // Run solver
   for (int run = 0; run < N_WARM_START; run++)
   {
@@ -133,45 +138,52 @@ void PacejkaMpccController::initialize(crs_models::pacejka_model::pacejka_car_st
       // Ugly indexing to get distance on track of predicted solution
       double distance_on_track = last_solution.states_[stage * solver_->getStateDimension() + pacejka_vars::THETA];
       // Convert it to track indice using density of track points which are regularly sampled
-      // int reference_track_index = distance_on_track * getStaticTrack()->getDensity();
-      std::cout << "Distance on track (Initialize Function): " << distance_on_track <<"\n"; 
-      std::cout<< "Spline_Index: "<< Spline_index << "\n";
-      std::cout<< "Spline_theta: "<< theta_ << "\n";
-      std::cout<< "Static theta: "<< theta_static << "\n";
-      int reference_track_index = distance_on_track * 2.9367;
-      double X = X_coef_3[reference_track_index] +
-                 X_coef_2[reference_track_index] * distance_on_track + 
-                 X_coef_1[reference_track_index] * std::pow(distance_on_track, 2) +
-                 X_coef_0[reference_track_index] * std::pow(distance_on_track, 3);
+      //int reference_track_index = distance_on_track * getStaticTrack()->getDensity();
+      // int reference_track_index = distance_on_track * 2.9367;
+     
+      // double X = X_coef_3[reference_track_index] +
+      //            X_coef_2[reference_track_index] * distance_on_track + 
+      //            X_coef_1[reference_track_index] * std::pow(distance_on_track, 2) +
+      //            X_coef_0[reference_track_index] * std::pow(distance_on_track, 3);
 
-      double Y = Y_coef_3[reference_track_index] +
-                 Y_coef_2[reference_track_index] * distance_on_track + 
-                 Y_coef_1[reference_track_index] * std::pow(distance_on_track, 2) +
-                 Y_coef_0[reference_track_index] * std::pow(distance_on_track, 3);
+      // double Y = Y_coef_3[reference_track_index] +
+      //            Y_coef_2[reference_track_index] * distance_on_track + 
+      //            Y_coef_1[reference_track_index] * std::pow(distance_on_track, 2) +
+      //            Y_coef_0[reference_track_index] * std::pow(distance_on_track, 3);
 
-      double x_rate= X_coef_2[reference_track_index] +
-                      2 * X_coef_1[reference_track_index] * distance_on_track + 
-                      3 * X_coef_0[reference_track_index] * std::pow(distance_on_track, 2); 
+      // double x_rate= X_coef_2[reference_track_index] +
+      //                 2 * X_coef_1[reference_track_index] * distance_on_track + 
+      //                 3 * X_coef_0[reference_track_index] * std::pow(distance_on_track, 2); 
 
-      double y_rate = Y_coef_2[reference_track_index] +
-                      2 * Y_coef_1[reference_track_index] * distance_on_track + 
-                      3 * Y_coef_0[reference_track_index] * std::pow(distance_on_track, 2);  
+      // double y_rate = Y_coef_2[reference_track_index] +
+      //                 2 * Y_coef_1[reference_track_index] * distance_on_track + 
+      //                 3 * Y_coef_0[reference_track_index] * std::pow(distance_on_track, 2);  
 
-      double phi = std::atan2(y_rate , x_rate);
+      // double phi = atan2(y_rate , x_rate);
+
       // Update tracking point based on predicted distance on track
       mpc_solvers::pacejka_solvers::trajectory_track_point track_point;
-      // track_point.x = getStaticTrack()->operator[](reference_track_index).x();
-      // track_point.y = getStaticTrack()->operator[](reference_track_index).y();
-      // track_point.grad_x = getStaticTrack()->getRate(reference_track_index).x();
-      // track_point.grad_y = getStaticTrack()->getRate(reference_track_index).y();
-      // track_point.theta = getStaticTrack()->getArcLength(reference_track_index);
-      // track_point.phi = getStaticTrack()->getTrackAngle(reference_track_index);
-      track_point.x = X;
-      track_point.y = Y;
-      track_point.grad_x = x_rate;
-      track_point.grad_y = y_rate;
+
+      //track_point.x = getStaticTrack()->operator[](reference_track_index).x();
+      //track_point.y = getStaticTrack()->operator[](reference_track_index).y();
+      //track_point.grad_x = getStaticTrack()->getRate(reference_track_index).x();
+      //track_point.grad_y = getStaticTrack()->getRate(reference_track_index).y();
+      //track_point.theta = getStaticTrack()->getArcLength(reference_track_index);
+      //track_point.phi = getStaticTrack()->getTrackAngle(reference_track_index);
+
+      // track_point.x = X;
+      // track_point.y = Y;
+      // track_point.grad_x = x_rate;
+      // track_point.grad_y = y_rate;
+      // track_point.theta = distance_on_track;
+      // track_point.phi = phi;
+     
+      track_point.x = Spline_ref.getRefCoords(distance_on_track).x();
+      track_point.y = Spline_ref.getRefCoords(distance_on_track).y();
+      track_point.grad_x = Spline_ref.getGradient(distance_on_track).x();
+      track_point.grad_y = Spline_ref.getGradient(distance_on_track).y();
       track_point.theta = distance_on_track;
-      track_point.phi = phi;
+      track_point.phi = Spline_ref.getTangentAngle(track_point.grad_y, track_point.grad_x);
 
       // Update reference visualization
       last_solution.reference_on_track_[stage] = Eigen::Vector3d(track_point.x, track_point.y, track_point.phi);
@@ -217,24 +229,22 @@ crs_models::pacejka_model::pacejka_car_input PacejkaMpccController::getControlIn
 
   // initialize state to virtually advanced vehicle states and inputs
   auto virtual_state = model_->applyModel(state, last_input_, config_.lag_compensation_time);
-  // int Spline_index = getclosestsplineindex(Eigen::Vector2d(virtual_state.pos_x, virtual_state.pos_y));
-  // theta_ = gettheta(Spline_index, Eigen::Vector2d(virtual_state.pos_x, virtual_state.pos_y));
-  // std::cout<< "Spline_Index(Control): "<< Spline_index << "\n";
-  // std::cout<< "Spline_theta(Control): "<< theta_ << "\n";
+  
   // theta_ = getStaticTrack()->getArcLength(
   //     getStaticTrack()->getClosestTrackPointIdx(Eigen::Vector2d(virtual_state.pos_x, virtual_state.pos_y)));
+
   double x0[] = {
     virtual_state.pos_x, virtual_state.pos_y, virtual_state.yaw,
     virtual_state.vel_x, virtual_state.vel_y, virtual_state.yaw_rate,
     last_input_.torque,  last_input_.steer,   theta_,
   };
-  
+
   // if lap is done, increase lap counter
   if (theta_ > (laps_ + 1) * max_arc_length)
   {
     laps_++;
   }
- 
+
   solver_->setInitialState(x0);
   // Run solver
   for (int current_stage = 0; current_stage < solver_->getHorizonLength(); current_stage++)
@@ -248,37 +258,44 @@ crs_models::pacejka_model::pacejka_car_input PacejkaMpccController::getControlIn
                                laps_ * getStaticTrack()->getMaxArcLength();
     // Convert it to track indice using density of track points which are regularly sampled
     //int reference_track_index = distance_on_track * getStaticTrack()->getDensity();
-    
-    int reference_track_index = distance_on_track * 2.9367;
-    // std::cout << "Horizon: " << current_stage <<"\n";
-    // std::cout << "Next Stage: " << next_stage <<"\n";
-    // std::cout << "Distance on track (get control Function): " << distance_on_track <<"\n";
-    // std::cout << "Reference Spline Index (get control Function): " << reference_track_index <<"\n";
-    // std::cout << "Max Arc Length: " << getStaticTrack()->getMaxArcLength() <<"\n";
+
+    //  double X = X_coef_3[reference_track_index] +
+    //             X_coef_2[reference_track_index] * distance_on_track + 
+    //             X_coef_1[reference_track_index] * std::pow(distance_on_track, 2) +
+    //             X_coef_0[reference_track_index] * std::pow(distance_on_track, 3);
+
+    // double Y = Y_coef_3[reference_track_index] +
+    //             Y_coef_2[reference_track_index] * distance_on_track + 
+    //             Y_coef_1[reference_track_index] * std::pow(distance_on_track, 2) +
+    //             Y_coef_0[reference_track_index] * std::pow(distance_on_track, 3);
+
+    // double x_rate= X_coef_2[reference_track_index] +
+    //                 2 * X_coef_1[reference_track_index] * distance_on_track + 
+    //                 3 * X_coef_0[reference_track_index] * std::pow(distance_on_track, 2); 
+
+    // double y_rate = Y_coef_2[reference_track_index] +
+    //                 2 * Y_coef_1[reference_track_index] * distance_on_track + 
+    //                 3 * Y_coef_0[reference_track_index] * std::pow(distance_on_track, 2);   
+
+    // double phi = atan2(y_rate , x_rate);
+
     // Update tracking point based on predicted distance on track
     mpc_solvers::pacejka_solvers::trajectory_track_point track_point;
-    // track_point.x = getStaticTrack()->operator[](reference_track_index).x();
-    // track_point.y = getStaticTrack()->operator[](reference_track_index).y();
-    // track_point.grad_x = getStaticTrack()->getRate(reference_track_index).x();
-    // track_point.grad_y = getStaticTrack()->getRate(reference_track_index).y();
-    // track_point.theta = distance_on_track + laps_ * getStaticTrack()->getMaxArcLength();
-    // track_point.phi = getStaticTrack()->getTrackAngle(reference_track_index) + laps_ * 2 * M_PI;
-    track_point.x = X_coef_3[reference_track_index] +
-                X_coef_2[reference_track_index] * distance_on_track + 
-                X_coef_1[reference_track_index] * std::pow(distance_on_track, 2) +
-                X_coef_0[reference_track_index] * std::pow(distance_on_track, 3);
-    track_point.y = Y_coef_3[reference_track_index] +
-                Y_coef_2[reference_track_index] * distance_on_track + 
-                Y_coef_1[reference_track_index] * std::pow(distance_on_track, 2) +
-                Y_coef_0[reference_track_index] * std::pow(distance_on_track, 3);
-    track_point.grad_x = X_coef_2[reference_track_index] +
-                    2 * X_coef_1[reference_track_index] * distance_on_track + 
-                    3 * X_coef_0[reference_track_index] * std::pow(distance_on_track, 2); 
-    track_point.grad_y = Y_coef_2[reference_track_index] +
-                    2 * Y_coef_1[reference_track_index] * distance_on_track + 
-                    3 * Y_coef_0[reference_track_index] * std::pow(distance_on_track, 2);   
+    //track_point.x = getStaticTrack()->operator[](reference_track_index).x();
+    //track_point.y = getStaticTrack()->operator[](reference_track_index).y();
+    //track_point.grad_x = getStaticTrack()->getRate(reference_track_index).x();
+    //track_point.grad_y = getStaticTrack()->getRate(reference_track_index).y();
+    //track_point.theta = distance_on_track + laps_ * getStaticTrack()->getMaxArcLength();
+    //track_point.phi = getStaticTrack()->getTrackAngle(reference_track_index) + laps_ * 2 * M_PI;
+  
+    track_point.x = Spline_ref.getRefCoords(distance_on_track).x();
+    track_point.y = Spline_ref.getRefCoords(distance_on_track).y();
+    track_point.grad_x = Spline_ref.getGradient(distance_on_track).x();
+    track_point.grad_y = Spline_ref.getGradient(distance_on_track).y();
     track_point.theta = distance_on_track + laps_ * getStaticTrack()->getMaxArcLength();
-    track_point.phi = std::atan2(track_point.grad_y , track_point.grad_x) + laps_ * 2 * M_PI;
+    track_point.phi = Spline_ref.getTangentAngle(track_point.grad_y, track_point.grad_x); + laps_ * 2 * M_PI;
+    std::cout<< "Track point x: "<< track_point.x << "\n";
+    std::cout<< "Track point y: "<< track_point.y << "\n";
     // Update reference visualization
     last_solution.reference_on_track_[current_stage] = Eigen::Vector3d(track_point.x, track_point.y, track_point.phi);
 

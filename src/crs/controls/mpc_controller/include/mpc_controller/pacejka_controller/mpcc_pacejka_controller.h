@@ -4,6 +4,7 @@
 #include <commons/filter.h>
 #include <controls/mpc_controller.h>
 #include <commons/static_track_trajectory.h>
+#include <commons/trajectory_spline.h>
 #include <memory>
 
 #include <cmath>
