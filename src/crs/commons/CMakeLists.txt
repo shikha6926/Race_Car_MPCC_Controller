@@ -20,6 +20,7 @@ cs_add_library(${PROJECT_NAME}
         src/trajectory.cpp
         src/static_track_trajectory.cpp
         src/dynamic_point_trajectory.cpp
+	  src/trajectory_spline.cpp
         )
 
 target_link_libraries(${PROJECT_NAME})
