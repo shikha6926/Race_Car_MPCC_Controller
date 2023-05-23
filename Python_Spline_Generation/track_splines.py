@@ -21,15 +21,19 @@ import numpy as np
 
 # Generate a parameterization of the full track using cubic splines using given
 # horizon and returns splines and its coefficients
-def fulltrack_splines():
-    t = np.linspace(0, 13.2799, len(xCoords), endpoint=True)
-    print(t)
-    cs_x = CubicSpline(t[1::100], xCoords[1::100], bc_type='not-a-knot')
-    cs_y = CubicSpline(t[1::100], yCoords[1::100], bc_type='not-a-knot')
+def fulltrack_splines(xCoords, yCoords):
+    t = np.linspace(0, 2*13.2799, len(xCoords), endpoint=True)
+    t = t[1::100]
+    xCoords = xCoords[1::100]
+    yCoords = yCoords[1::100]
+    # for x in range(len(xCoords)):
+    #     print(f"{xCoords[x]}, {t[x]}")
+    cs_x = CubicSpline(t, xCoords, bc_type='not-a-knot')
+    cs_y = CubicSpline(t, yCoords, bc_type='not-a-knot')
     # Obtain the coefficients of cubic functions used for the splines
     coeff_x = cs_x.c
     coeff_y = cs_y.c
-    return cs_x, cs_y, coeff_x, coeff_y
+    return cs_x, cs_y, coeff_x, coeff_y, xCoords, yCoords
 
 
 # Generate a parameterization of the custom track length using cubic splines
@@ -81,18 +85,24 @@ def plot_smoothtrack(xCoords, yCoords, x_new_c, y_new_c):
     plt.savefig('custom_length_track_spline.png')
     plt.show()
 
-def store_into_yaml(theta_x, theta_y):
+def store_into_yaml(theta_x, theta_y, xCoords, yCoords):
     # Store coefficients of splines in yaml file
-    x_coef = {'theta_0': theta_x[0].tolist(), 'theta_1': theta_x[1].tolist(),
-              'theta_2': theta_x[2].tolist(), 'theta_3': theta_x[3].tolist()}
+    x_coef = {'X_a': theta_x[3].tolist(), 'X_b': theta_x[2].tolist(),
+              'X_c': theta_x[1].tolist(), 'X_d': theta_x[0].tolist()}
 
-    y_coef = {'theta_0': theta_y[0].tolist(), 'theta_1': theta_y[1].tolist(),
-              'theta_2': theta_y[2].tolist(), 'theta_3': theta_y[3].tolist()}
-    with open('fulltrack_spline_xcoeff.yaml', 'w') as file:
+    y_coef = {'Y_a': theta_y[3].tolist(), 'Y_b': theta_y[2].tolist(),
+              'Y_c': theta_y[1].tolist(), 'Y_d': theta_y[0].tolist()}
+
+    X_coords = {'X_coords': xCoords.tolist()}
+    Y_coords = {'Y_coords': yCoords.tolist()}
+
+    with open('fulltrack_spline.yaml', 'w') as file:
         yaml.dump(x_coef, file, sort_keys=False)
-
-    with open('fulltrack_spline_ycoeff.yaml', 'w') as file:
         yaml.dump(y_coef, file, sort_keys=False)
+        yaml.dump(X_coords, file, sort_keys=False)
+        yaml.dump(Y_coords, file, sort_keys=False)
+    # with open('fulltrack_spline_ycoeff.yaml', 'w') as file:
+    #     yaml.dump(y_coef, file, sort_keys=False)
 
 def get_coords_from_yaml(yaml_file):
     # Load plot specification file
@@ -115,10 +125,10 @@ if __name__ == '__main__':
     horizon = 40
     start = 950
     
-    f_x, f_y, theta_x, theta_y = fulltrack_splines()
+    f_x, f_y, theta_x, theta_y, xCoords_, yCoords_ = fulltrack_splines(xCoords, yCoords)
     x_new, y_new = smooth_track(len(xCoords), f_x, f_y)
-    print(len(theta_x[0]))
-    store_into_yaml(theta_x, theta_y)
+    print(f"Length of coef: {len(theta_x[0])}")
+    store_into_yaml(theta_x, theta_y, xCoords_, yCoords_)
     for i in range(len(theta_y[2])):
         print(f"{theta_y[3][i]},")
     # Print the cubic functions for each spline segment

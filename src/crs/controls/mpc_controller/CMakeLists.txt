@@ -28,6 +28,7 @@ include_directories(
   $ENV{ACADOS_SOURCE_DIR}/include/acados
   $ENV{ACADOS_SOURCE_DIR}/include/blasfeo/include
   $ENV{ACADOS_SOURCE_DIR}/include/hpipm/include
+
 )
 #############
 # Libraries #

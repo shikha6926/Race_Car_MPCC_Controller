@@ -1,28 +1,77 @@
 #include <mpc_controller/pacejka_controller/mpcc_pacejka_controller.h>
-#include <mpc_controller/pacejka_controller/mpcc_pacejka_coef_copy.h>
+// #include <mpc_controller/pacejka_controller/mpcc_pacejka_coef_copy.h>
 #include <cmath>
 #include <string>
+#include <yaml-cpp/yaml.h>
+// #include "spline_yaml/fulltrack_spline.yaml"
 #ifdef acados_pacejka_mpcc_solver_FOUND
 #include "acados_pacejka_mpcc_solver/acados_pacejka_mpcc_solver.h"
 #endif
 
 
-extern std::vector<double> X_coef_0;
-extern std::vector<double> X_coef_1;
-extern std::vector<double> X_coef_2;
-extern std::vector<double> X_coef_3;
-extern std::vector<double> Y_coef_0;
-extern std::vector<double> Y_coef_1;
-extern std::vector<double> Y_coef_2;
-extern std::vector<double> Y_coef_3;
-extern std::vector<double> X_coords;
-extern std::vector<double> Y_coords;
+// YAML::Node file_content = YAML::LoadFile("/code/src/crs/controls/mpc_controller/src/pacejka_controller/spline_yaml/fulltrack_spline.yaml");
+
+// std::vector<double> X_coef_0 = file_content["X_d"].as<std::vector<double>>();
+
+// std::vector<double> X_coef_1 = file_content["X_c"].as<std::vector<double>>();
+// std::vector<double> X_coef_2 = file_content["X_b"].as<std::vector<double>>();
+// std::vector<double> X_coef_3 = file_content["X_a"].as<std::vector<double>>();
+// std::vector<double> Y_coef_0 = file_content["Y_d"].as<std::vector<double>>();
+// std::vector<double> Y_coef_1 = file_content["Y_c"].as<std::vector<double>>();
+// std::vector<double> Y_coef_2 = file_content["Y_b"].as<std::vector<double>>();
+// std::vector<double> Y_coef_3 = file_content["Y_a"].as<std::vector<double>>();
+// std::vector<double> X_coords = file_content["X_coords"].as<std::vector<double>>();
+// std::vector<double> Y_coords = file_content["Y_coords"].as<std::vector<double>>();
+
 
 
 namespace crs_controls
 {
-SplineTrajectory Spline_ref(X_coords, Y_coords, X_coef_0, X_coef_1, X_coef_2,  X_coef_3,
-                    Y_coef_0, Y_coef_1, Y_coef_2, Y_coef_3);
+typedef struct{
+  std::vector<double> X_coef_0;
+  std::vector<double> X_coef_1;
+  std::vector<double> X_coef_2;
+  std::vector<double> X_coef_3;
+  std::vector<double> Y_coef_0;
+  std::vector<double> Y_coef_1;
+  std::vector<double> Y_coef_2;
+  std::vector<double> Y_coef_3;
+  std::vector<double> X_coords;
+  std::vector<double> Y_coords;
+}SPLINE_PARAMS;
+
+inline bool loadSplineParamsFromFile(std::string yamlFilePath, SPLINE_PARAMS& params)
+{
+  try
+  {
+    YAML::Node file_content = YAML::LoadFile(yamlFilePath);
+    params.X_coef_0 = file_content["X_d"].as<std::vector<double>>();
+    params.X_coef_1 = file_content["X_c"].as<std::vector<double>>();
+    params.X_coef_2 = file_content["X_b"].as<std::vector<double>>();
+    params.X_coef_3 = file_content["X_a"].as<std::vector<double>>();
+    params.Y_coef_0 = file_content["Y_d"].as<std::vector<double>>();
+    params.Y_coef_1 = file_content["Y_c"].as<std::vector<double>>();
+    params.Y_coef_2 = file_content["Y_b"].as<std::vector<double>>();
+    params.Y_coef_3 = file_content["Y_a"].as<std::vector<double>>();
+    params.X_coords = file_content["X_coords"].as<std::vector<double>>();
+    params.Y_coords = file_content["Y_coords"].as<std::vector<double>>();
+  }
+  catch (YAML::BadFile& e)
+  {
+    std::cout << "Error reading file at " << yamlFilePath << e.msg << std::endl;
+    return false;
+  }
+  return true;
+}
+
+SPLINE_PARAMS spline_params_obj;
+bool read_params_yaml = loadSplineParamsFromFile("/code/src/crs/controls/mpc_controller/src/pacejka_controller/spline_yaml/fulltrack_spline.yaml",
+                                                 spline_params_obj);
+SplineTrajectory Spline_ref(spline_params_obj.X_coords, spline_params_obj.Y_coords, 
+                            spline_params_obj.X_coef_0, spline_params_obj.X_coef_1,
+                            spline_params_obj.X_coef_2, spline_params_obj.X_coef_3,
+                            spline_params_obj.Y_coef_0, spline_params_obj.Y_coef_1, 
+                            spline_params_obj.Y_coef_2, spline_params_obj.Y_coef_3);
 
 void PacejkaMpccController::loadMpcSolver()
 {
@@ -88,7 +137,7 @@ std::vector<std::vector<double>> PacejkaMpccController::getPlannedTrajectory()
 void PacejkaMpccController::initialize(crs_models::pacejka_model::pacejka_car_state state)
 {
   int N_ = solver_->getHorizonLength();
-  double max_arc_length = getStaticTrack()->getMaxArcLength();
+  double max_arc_length = Spline_ref.getMaxArcLength();
   auto model_dynamics = model_->getParams();
   int N_WARM_START = 1000;
 
@@ -135,48 +184,13 @@ void PacejkaMpccController::initialize(crs_models::pacejka_model::pacejka_car_st
   {
     for (int stage = 0; stage < solver_->getHorizonLength(); stage++)
     {
+      
       // Ugly indexing to get distance on track of predicted solution
       double distance_on_track = last_solution.states_[stage * solver_->getStateDimension() + pacejka_vars::THETA];
       // Convert it to track indice using density of track points which are regularly sampled
-      //int reference_track_index = distance_on_track * getStaticTrack()->getDensity();
-      // int reference_track_index = distance_on_track * 2.9367;
-     
-      // double X = X_coef_3[reference_track_index] +
-      //            X_coef_2[reference_track_index] * distance_on_track + 
-      //            X_coef_1[reference_track_index] * std::pow(distance_on_track, 2) +
-      //            X_coef_0[reference_track_index] * std::pow(distance_on_track, 3);
-
-      // double Y = Y_coef_3[reference_track_index] +
-      //            Y_coef_2[reference_track_index] * distance_on_track + 
-      //            Y_coef_1[reference_track_index] * std::pow(distance_on_track, 2) +
-      //            Y_coef_0[reference_track_index] * std::pow(distance_on_track, 3);
-
-      // double x_rate= X_coef_2[reference_track_index] +
-      //                 2 * X_coef_1[reference_track_index] * distance_on_track + 
-      //                 3 * X_coef_0[reference_track_index] * std::pow(distance_on_track, 2); 
-
-      // double y_rate = Y_coef_2[reference_track_index] +
-      //                 2 * Y_coef_1[reference_track_index] * distance_on_track + 
-      //                 3 * Y_coef_0[reference_track_index] * std::pow(distance_on_track, 2);  
-
-      // double phi = atan2(y_rate , x_rate);
-
+    
       // Update tracking point based on predicted distance on track
       mpc_solvers::pacejka_solvers::trajectory_track_point track_point;
-
-      //track_point.x = getStaticTrack()->operator[](reference_track_index).x();
-      //track_point.y = getStaticTrack()->operator[](reference_track_index).y();
-      //track_point.grad_x = getStaticTrack()->getRate(reference_track_index).x();
-      //track_point.grad_y = getStaticTrack()->getRate(reference_track_index).y();
-      //track_point.theta = getStaticTrack()->getArcLength(reference_track_index);
-      //track_point.phi = getStaticTrack()->getTrackAngle(reference_track_index);
-
-      // track_point.x = X;
-      // track_point.y = Y;
-      // track_point.grad_x = x_rate;
-      // track_point.grad_y = y_rate;
-      // track_point.theta = distance_on_track;
-      // track_point.phi = phi;
      
       track_point.x = Spline_ref.getRefCoords(distance_on_track).x();
       track_point.y = Spline_ref.getRefCoords(distance_on_track).y();
@@ -215,7 +229,7 @@ crs_models::pacejka_model::pacejka_car_input PacejkaMpccController::getControlIn
   // max_arc_length is needed to detect when a lap is done. The full track has
   // been extended by a full lap, such that the horizon can predict past the
   // start
-  double max_arc_length = getStaticTrack()->getMaxArcLength();
+  double max_arc_length = Spline_ref.getMaxArcLength();
   mpc_solvers::pacejka_solvers::tracking_costs mpc_costs = { config_.Q1, config_.Q2, config_.R1,
                                                              config_.R2, config_.R3, config_.q };
 
@@ -255,30 +269,10 @@ crs_models::pacejka_model::pacejka_car_input PacejkaMpccController::getControlIn
     int next_stage = current_stage + (current_stage != solver_->getHorizonLength() - 1);
     // Ugly indexing to get distance on track of predicted solution
     double distance_on_track = last_solution.states_[next_stage * solver_->getStateDimension() + pacejka_vars::THETA] -
-                               laps_ * getStaticTrack()->getMaxArcLength();
+                               laps_ * Spline_ref.getMaxArcLength();
+    std::cout << "Distance on track:" << distance_on_track << "\n";
     // Convert it to track indice using density of track points which are regularly sampled
     //int reference_track_index = distance_on_track * getStaticTrack()->getDensity();
-
-    //  double X = X_coef_3[reference_track_index] +
-    //             X_coef_2[reference_track_index] * distance_on_track + 
-    //             X_coef_1[reference_track_index] * std::pow(distance_on_track, 2) +
-    //             X_coef_0[reference_track_index] * std::pow(distance_on_track, 3);
-
-    // double Y = Y_coef_3[reference_track_index] +
-    //             Y_coef_2[reference_track_index] * distance_on_track + 
-    //             Y_coef_1[reference_track_index] * std::pow(distance_on_track, 2) +
-    //             Y_coef_0[reference_track_index] * std::pow(distance_on_track, 3);
-
-    // double x_rate= X_coef_2[reference_track_index] +
-    //                 2 * X_coef_1[reference_track_index] * distance_on_track + 
-    //                 3 * X_coef_0[reference_track_index] * std::pow(distance_on_track, 2); 
-
-    // double y_rate = Y_coef_2[reference_track_index] +
-    //                 2 * Y_coef_1[reference_track_index] * distance_on_track + 
-    //                 3 * Y_coef_0[reference_track_index] * std::pow(distance_on_track, 2);   
-
-    // double phi = atan2(y_rate , x_rate);
-
     // Update tracking point based on predicted distance on track
     mpc_solvers::pacejka_solvers::trajectory_track_point track_point;
     //track_point.x = getStaticTrack()->operator[](reference_track_index).x();
@@ -292,7 +286,7 @@ crs_models::pacejka_model::pacejka_car_input PacejkaMpccController::getControlIn
     track_point.y = Spline_ref.getRefCoords(distance_on_track).y();
     track_point.grad_x = Spline_ref.getGradient(distance_on_track).x();
     track_point.grad_y = Spline_ref.getGradient(distance_on_track).y();
-    track_point.theta = distance_on_track + laps_ * getStaticTrack()->getMaxArcLength();
+    track_point.theta = distance_on_track + laps_ * Spline_ref.getMaxArcLength();
     track_point.phi = Spline_ref.getTangentAngle(track_point.grad_y, track_point.grad_x); + laps_ * 2 * M_PI;
     std::cout<< "Track point x: "<< track_point.x << "\n";
     std::cout<< "Track point y: "<< track_point.y << "\n";

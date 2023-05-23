@@ -18,7 +18,7 @@
   <depend>controls</depend>
 
   <depend>mpc_solvers</depend>
-
+  <depend>yaml_cpp_catkin</depend>
 
   <!-- Optional -->
   <depend>acados_pacejka_mpcc_solver</depend>
