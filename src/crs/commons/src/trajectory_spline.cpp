@@ -16,6 +16,9 @@ namespace crs_controls
 //     y_coords_.push_back(pt.y());
 //   }
 // }
+
+
+
 const double SplineTrajectory::getLastRequestedTrackAngle() const
 {
   return 1.0;
@@ -52,12 +55,13 @@ int SplineTrajectory::getclosestsplineindex(Eigen::Vector2d state_pt, SplineTraj
 
 double SplineTrajectory::gettheta(int spline_index, Eigen::Vector2d state_pt, SplineTrajectory spline_track)
 {
-    double density =  2.9367;
+    double density =  spline_track.getMaxArcLength();
+    spline_index = spline_index - 1;
     Eigen::Vector2d previous_pt = spline_track.operator[](spline_index);
     Eigen::Vector2d next_pt = spline_track.operator[](spline_index + 1);
     double spline_arclength = ((spline_index + 1) /density) - (spline_index /density);
     double spline_halved = spline_arclength / 2;
-    double mid_theta = (spline_index /density) + spline_halved;
+    double mid_theta = spline_halved;
     double mid_X; 
     double mid_Y;
     double dist = 10;
@@ -118,10 +122,8 @@ double SplineTrajectory::gettheta(int spline_index, Eigen::Vector2d state_pt, Sp
 
 Eigen::Vector2d SplineTrajectory::getRefCoords(double distance_on_track) 
 {
-    int idx = distance_on_track * SplineTrajectory::getDensity() - 1;
-    double distance = distance_on_track - ((double)idx / SplineTrajectory::getDensity());
-    std::cout<< "distance "<< distance << "\n";
-    std::cout<< "idx "<< idx << "\n";
+    int idx = distance_on_track * SplineTrajectory::getDensity();
+    double distance = distance_on_track - ((double)(idx) * 0.334);
     double x_coords_= X_coef_3_[idx] + 
             X_coef_2_[idx] * distance + 
             X_coef_1_[idx] * std::pow(distance, 2) + 
@@ -136,8 +138,9 @@ Eigen::Vector2d SplineTrajectory::getRefCoords(double distance_on_track)
 
 Eigen::Vector2d SplineTrajectory::getGradient(double distance_on_track)
 {
-    int idx = distance_on_track * SplineTrajectory::getDensity() - 1;
-    double distance = distance_on_track - ((double)idx / SplineTrajectory::getDensity());
+    int idx = distance_on_track * SplineTrajectory::getDensity();
+    double distance = distance_on_track - ((double)(idx)  * 0.334);
+    
     double x_rate_= X_coef_2_[idx] +
             2 * X_coef_1_[idx] * distance + 
             3 * X_coef_0_[idx] * std::pow(distance, 2); 
@@ -154,6 +157,11 @@ double SplineTrajectory::getTangentAngle(double y_rate , double x_rate)
     return phi_;
 
 }   
+
+double SplineTrajectory::getMaxArcLength() const
+{
+  return (13.016303);
+}
  
 }
 

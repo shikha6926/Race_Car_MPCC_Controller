@@ -66,7 +66,7 @@ private:
    * @brief The density of the centerline points
    *
    */
-  double density_ = 2.9367;
+  double density_ = 2.993;
 
   /**
    * @brief Unwraps the track angle over the full trajectory
@@ -206,6 +206,8 @@ public:
    *
    * @return double
    */
+
+  double getMaxArcLength() const;
 
   double getDensity() const
   {
