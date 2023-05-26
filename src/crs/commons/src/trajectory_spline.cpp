@@ -36,47 +36,44 @@ int SplineTrajectory::getclosestsplineindex(Eigen::Vector2d state_pt, SplineTraj
     int first_id = spline_track.getClosestTrackPointIdx(state_pt);
     // Get the 2nd Closest point id
     // After getting the first id, select the spline
-    int next_id = first_id + 1;
-    int previous_id = first_id - 1;
-    Eigen::Vector2d next_pt =spline_track.operator[](next_id);
-    Eigen::Vector2d previous_pt = spline_track.operator[](previous_id);
+    Eigen::Vector2d next_pt = spline_track.operator[](first_id + 1);
+    Eigen::Vector2d previous_pt = spline_track.operator[](first_id - 1);
     
     if (euclidean2Dist(next_pt.x(), next_pt.y(), state_pt.x(), state_pt.y()) > 
     euclidean2Dist(previous_pt.x(), previous_pt.y(), state_pt.x(), state_pt.y()))
     {
-        spline_index = previous_id;
+        spline_index = first_id - 1;
     }
     else{
         spline_index = first_id;
     }
-
+    
     return spline_index;
 }
 
 double SplineTrajectory::gettheta(int spline_index, Eigen::Vector2d state_pt, SplineTrajectory spline_track)
 {
-    double density =  spline_track.getMaxArcLength();
-    spline_index = spline_index - 1;
-    Eigen::Vector2d previous_pt = spline_track.operator[](spline_index);
-    Eigen::Vector2d next_pt = spline_track.operator[](spline_index + 1);
-    double spline_arclength = ((spline_index + 1) /density) - (spline_index /density);
+    double density =  spline_track.getDensity();
+    Eigen::Vector2d start_pt = spline_track.operator[](spline_index);
+    Eigen::Vector2d end_pt = spline_track.operator[](spline_index + 1);
+    double spline_arclength = (1 / density);
     double spline_halved = spline_arclength / 2;
-    double mid_theta = spline_halved;
+    double mid_theta = (spline_index / density) + spline_halved;
     double mid_X; 
     double mid_Y;
-    double dist = 10;
-    double next_point_dist, first_point_dist;
+    double dist = 0.2;
+    double end_point_dist, start_point_dist;
     double final_theta;
-    double next_pt_theta = (spline_index / density) + spline_arclength;
-    double previous_pt_theta = (spline_index / density);
+    double end_pt_theta = (spline_index + 1) * spline_arclength;
+    double start_pt_theta = (spline_index * spline_arclength);
     while (dist >= 0.2)
     {     
-        first_point_dist = euclidean2Dist(previous_pt.x(), previous_pt.y(), state_pt.x(), state_pt.y());
-        next_point_dist = euclidean2Dist(next_pt.x(), next_pt.y(), state_pt.x(), state_pt.y());
+        start_point_dist = euclidean2Dist(start_pt.x(), start_pt.y(), state_pt.x(), state_pt.y());
+        end_point_dist = euclidean2Dist(end_pt.x(), end_pt.y(), state_pt.x(), state_pt.y());
         spline_halved = spline_halved / 2;
-        if(next_point_dist < first_point_dist)
+        if(end_point_dist < start_point_dist)
         {    
-            dist = next_point_dist;
+            dist = end_point_dist;
             mid_X = X_coef_3_[spline_index] +
                     X_coef_2_[spline_index] * mid_theta + 
                     X_coef_1_[spline_index] * std::pow(mid_theta, 2) +
@@ -86,13 +83,13 @@ double SplineTrajectory::gettheta(int spline_index, Eigen::Vector2d state_pt, Sp
                     Y_coef_2_[spline_index] * mid_theta + 
                     Y_coef_1_[spline_index] * std::pow(mid_theta, 2) +
                     Y_coef_0_[spline_index] * std::pow(mid_theta, 3);
-            previous_pt = Eigen::Vector2d(mid_X, mid_Y);            
-            previous_pt_theta = mid_theta; 
+            start_pt = Eigen::Vector2d(mid_X, mid_Y);            
+            start_pt_theta = mid_theta; 
             mid_theta = mid_theta + spline_halved;
         }
         else
         {
-            dist = first_point_dist;
+            dist = start_point_dist;
             mid_X = X_coef_3_[spline_index] +
                     X_coef_2_[spline_index] * mid_theta + 
                     X_coef_1_[spline_index] * std::pow(mid_theta, 2) +
@@ -102,20 +99,20 @@ double SplineTrajectory::gettheta(int spline_index, Eigen::Vector2d state_pt, Sp
                     Y_coef_2_[spline_index] * mid_theta + 
                     Y_coef_1_[spline_index] * std::pow(mid_theta, 2) +
                     Y_coef_0_[spline_index] * std::pow(mid_theta, 3);
-            next_pt = Eigen::Vector2d(mid_X, mid_Y);
-            next_pt_theta = mid_theta;
+            end_pt = Eigen::Vector2d(mid_X, mid_Y);
+            end_pt_theta = mid_theta;
             mid_theta = mid_theta - spline_halved;
         }
 
     }
-    first_point_dist = euclidean2Dist(previous_pt.x(), previous_pt.y(), state_pt.x(), state_pt.y());
-    next_point_dist = euclidean2Dist(next_pt.x(), next_pt.y(), state_pt.x(), state_pt.y());
-    if (next_point_dist < first_point_dist)
+    start_point_dist = euclidean2Dist(start_pt.x(), start_pt.y(), state_pt.x(), state_pt.y());
+    end_point_dist = euclidean2Dist(end_pt.x(), end_pt.y(), state_pt.x(), state_pt.y());
+    if (end_point_dist < start_point_dist)
     {
-        final_theta = next_pt_theta;
+        final_theta = end_pt_theta;
     }
     else{
-        final_theta = previous_pt_theta;
+        final_theta = start_pt_theta;
     }
     return final_theta;
 }

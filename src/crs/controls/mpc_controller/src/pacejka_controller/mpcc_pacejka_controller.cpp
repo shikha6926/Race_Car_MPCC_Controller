@@ -9,24 +9,9 @@
 #endif
 
 
-// YAML::Node file_content = YAML::LoadFile("/code/src/crs/controls/mpc_controller/src/pacejka_controller/spline_yaml/fulltrack_spline.yaml");
-
-// std::vector<double> X_coef_0 = file_content["X_d"].as<std::vector<double>>();
-
-// std::vector<double> X_coef_1 = file_content["X_c"].as<std::vector<double>>();
-// std::vector<double> X_coef_2 = file_content["X_b"].as<std::vector<double>>();
-// std::vector<double> X_coef_3 = file_content["X_a"].as<std::vector<double>>();
-// std::vector<double> Y_coef_0 = file_content["Y_d"].as<std::vector<double>>();
-// std::vector<double> Y_coef_1 = file_content["Y_c"].as<std::vector<double>>();
-// std::vector<double> Y_coef_2 = file_content["Y_b"].as<std::vector<double>>();
-// std::vector<double> Y_coef_3 = file_content["Y_a"].as<std::vector<double>>();
-// std::vector<double> X_coords = file_content["X_coords"].as<std::vector<double>>();
-// std::vector<double> Y_coords = file_content["Y_coords"].as<std::vector<double>>();
-
-
-
 namespace crs_controls
 {
+
 typedef struct{
   std::vector<double> X_coef_0;
   std::vector<double> X_coef_1;
@@ -67,7 +52,7 @@ inline bool loadSplineParamsFromFile(std::string yamlFilePath, SPLINE_PARAMS& pa
 SPLINE_PARAMS spline_params_obj;
 bool read_params_yaml = loadSplineParamsFromFile("/code/src/crs/controls/mpc_controller/src/pacejka_controller/spline_yaml/fulltrack_spline.yaml",
                                                  spline_params_obj);
-SplineTrajectory Spline_ref(spline_params_obj.X_coords, spline_params_obj.Y_coords, 
+SplineTrajectory spline_track(spline_params_obj.X_coords, spline_params_obj.Y_coords, 
                             spline_params_obj.X_coef_0, spline_params_obj.X_coef_1,
                             spline_params_obj.X_coef_2, spline_params_obj.X_coef_3,
                             spline_params_obj.Y_coef_0, spline_params_obj.Y_coef_1, 
@@ -117,8 +102,6 @@ std::vector<std::vector<double>> PacejkaMpccController::getPlannedTrajectory()
     double y_pos = last_solution.states_[i * solver_->getStateDimension() + pacejka_vars::Y];
     double vel = std::sqrt(std::pow(last_solution.states_[i * solver_->getStateDimension() + pacejka_vars::VX], 2) +
                            std::pow(last_solution.states_[i * solver_->getStateDimension() + pacejka_vars::VY], 2));
-    // std::cout<< "planned x:"<<x_pos <<"\n";
-    // std::cout<< "planned y:"<<y_pos <<"\n";
     // Append values to trajectory for visualization
     traj.push_back({
         x_pos,                                                                        // Planned x
@@ -137,7 +120,7 @@ std::vector<std::vector<double>> PacejkaMpccController::getPlannedTrajectory()
 void PacejkaMpccController::initialize(crs_models::pacejka_model::pacejka_car_state state)
 {
   int N_ = solver_->getHorizonLength();
-  double max_arc_length = Spline_ref.getMaxArcLength();
+  double max_arc_length = spline_track.getMaxArcLength();
   auto model_dynamics = model_->getParams();
   int N_WARM_START = 1000;
 
@@ -148,12 +131,12 @@ void PacejkaMpccController::initialize(crs_models::pacejka_model::pacejka_car_st
   // Initial torque input. Lets use 50% throttle
   last_input_.torque = 0.5;
   // Set initial arc length
-  theta_ = getStaticTrack()->getArcLength(
-      getStaticTrack()->getClosestTrackPointIdx(Eigen::Vector2d(state.pos_x, state.pos_y)));
+  // theta_ = getStaticTrack()->getArcLength(
+  //     getStaticTrack()->getClosestTrackPointIdx(Eigen::Vector2d(state.pos_x, state.pos_y)));
 
-  // int Spline_index = Spline_ref.getclosestsplineindex(Eigen::Vector2d(state.pos_x, state.pos_y), Spline_ref);
-  // theta_ = Spline_ref.gettheta(Spline_index, Eigen::Vector2d(state.pos_x, state.pos_y), Spline_ref);
-
+  int spline_index = spline_track.getclosestsplineindex(Eigen::Vector2d(state.pos_x, state.pos_y), spline_track);
+  theta_ = spline_track.gettheta(spline_index, Eigen::Vector2d(state.pos_x, state.pos_y), spline_track);
+  
   double x_init[9];
   x_init[0] = state.pos_x;
   x_init[1] = state.pos_y;
@@ -184,7 +167,9 @@ void PacejkaMpccController::initialize(crs_models::pacejka_model::pacejka_car_st
   {
     for (int stage = 0; stage < solver_->getHorizonLength(); stage++)
     {
-      
+      // std::cout << "Theta from static track:" << theta_ << "\n";
+      // std::cout << "Spline index:" << Spline_index << "\n";
+      // std::cout << "Theta from spline:" << theta_spline << "\n";
       // Ugly indexing to get distance on track of predicted solution
       double distance_on_track = last_solution.states_[stage * solver_->getStateDimension() + pacejka_vars::THETA];
       // Convert it to track indice using density of track points which are regularly sampled
@@ -192,12 +177,12 @@ void PacejkaMpccController::initialize(crs_models::pacejka_model::pacejka_car_st
       // Update tracking point based on predicted distance on track
       mpc_solvers::pacejka_solvers::trajectory_track_point track_point;
      
-      track_point.x = Spline_ref.getRefCoords(distance_on_track).x();
-      track_point.y = Spline_ref.getRefCoords(distance_on_track).y();
-      track_point.grad_x = Spline_ref.getGradient(distance_on_track).x();
-      track_point.grad_y = Spline_ref.getGradient(distance_on_track).y();
+      track_point.x = spline_track.getRefCoords(distance_on_track).x();
+      track_point.y = spline_track.getRefCoords(distance_on_track).y();
+      track_point.grad_x = spline_track.getGradient(distance_on_track).x();
+      track_point.grad_y = spline_track.getGradient(distance_on_track).y();
       track_point.theta = distance_on_track;
-      track_point.phi = Spline_ref.getTangentAngle(track_point.grad_y, track_point.grad_x);
+      track_point.phi = spline_track.getTangentAngle(track_point.grad_y, track_point.grad_x);
 
       // Update reference visualization
       last_solution.reference_on_track_[stage] = Eigen::Vector3d(track_point.x, track_point.y, track_point.phi);
@@ -229,7 +214,7 @@ crs_models::pacejka_model::pacejka_car_input PacejkaMpccController::getControlIn
   // max_arc_length is needed to detect when a lap is done. The full track has
   // been extended by a full lap, such that the horizon can predict past the
   // start
-  double max_arc_length = Spline_ref.getMaxArcLength();
+  double max_arc_length = spline_track.getMaxArcLength();
   mpc_solvers::pacejka_solvers::tracking_costs mpc_costs = { config_.Q1, config_.Q2, config_.R1,
                                                              config_.R2, config_.R3, config_.q };
 
@@ -269,27 +254,17 @@ crs_models::pacejka_model::pacejka_car_input PacejkaMpccController::getControlIn
     int next_stage = current_stage + (current_stage != solver_->getHorizonLength() - 1);
     // Ugly indexing to get distance on track of predicted solution
     double distance_on_track = last_solution.states_[next_stage * solver_->getStateDimension() + pacejka_vars::THETA] -
-                               laps_ * Spline_ref.getMaxArcLength();
-    std::cout << "Distance on track:" << distance_on_track << "\n";
+                               laps_ * spline_track.getMaxArcLength();
     // Convert it to track indice using density of track points which are regularly sampled
-    //int reference_track_index = distance_on_track * getStaticTrack()->getDensity();
     // Update tracking point based on predicted distance on track
     mpc_solvers::pacejka_solvers::trajectory_track_point track_point;
-    //track_point.x = getStaticTrack()->operator[](reference_track_index).x();
-    //track_point.y = getStaticTrack()->operator[](reference_track_index).y();
-    //track_point.grad_x = getStaticTrack()->getRate(reference_track_index).x();
-    //track_point.grad_y = getStaticTrack()->getRate(reference_track_index).y();
-    //track_point.theta = distance_on_track + laps_ * getStaticTrack()->getMaxArcLength();
-    //track_point.phi = getStaticTrack()->getTrackAngle(reference_track_index) + laps_ * 2 * M_PI;
   
-    track_point.x = Spline_ref.getRefCoords(distance_on_track).x();
-    track_point.y = Spline_ref.getRefCoords(distance_on_track).y();
-    track_point.grad_x = Spline_ref.getGradient(distance_on_track).x();
-    track_point.grad_y = Spline_ref.getGradient(distance_on_track).y();
-    track_point.theta = distance_on_track + laps_ * Spline_ref.getMaxArcLength();
-    track_point.phi = Spline_ref.getTangentAngle(track_point.grad_y, track_point.grad_x); + laps_ * 2 * M_PI;
-    std::cout<< "Track point x: "<< track_point.x << "\n";
-    std::cout<< "Track point y: "<< track_point.y << "\n";
+    track_point.x = spline_track.getRefCoords(distance_on_track).x();
+    track_point.y = spline_track.getRefCoords(distance_on_track).y();
+    track_point.grad_x = spline_track.getGradient(distance_on_track).x();
+    track_point.grad_y = spline_track.getGradient(distance_on_track).y();
+    track_point.theta = distance_on_track + laps_ * spline_track.getMaxArcLength();
+    track_point.phi = spline_track.getTangentAngle(track_point.grad_y, track_point.grad_x); + laps_ * 2 * M_PI;
     // Update reference visualization
     last_solution.reference_on_track_[current_stage] = Eigen::Vector3d(track_point.x, track_point.y, track_point.phi);
 
