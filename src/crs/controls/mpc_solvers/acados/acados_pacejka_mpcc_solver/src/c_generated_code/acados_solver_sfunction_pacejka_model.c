@@ -67,7 +67,7 @@ static void mdlInitializeSizes (SimStruct *S)
     // ubx_0
     ssSetInputPortVectorDimension(S, 1, 9);
     // parameters
-    ssSetInputPortVectorDimension(S, 2, (40+1) * 26);
+    ssSetInputPortVectorDimension(S, 2, (40+1) * 20);
     // lbx
     ssSetInputPortVectorDimension(S, 3, 351);
     // ubx
@@ -151,7 +151,7 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     InputRealPtrsType in_sign;
 
     // local buffer
-    real_t buffer[26];
+    real_t buffer[20];
 
     /* go through inputs */
     // lbx_0
@@ -171,9 +171,9 @@ static void mdlOutputs(SimStruct *S, int_T tid)
     // update value of parameters
     for (int ii = 0; ii <= 40; ii++)
     {
-        for (int jj = 0; jj < 26; jj++)
-            buffer[jj] = (double)(*in_sign[ii*26+jj]);
-        pacejka_model_acados_update_params(capsule, ii, buffer, 26);
+        for (int jj = 0; jj < 20; jj++)
+            buffer[jj] = (double)(*in_sign[ii*20+jj]);
+        pacejka_model_acados_update_params(capsule, ii, buffer, 20);
     }
 
   

@@ -84,7 +84,7 @@ loadControllerVisualizer(ros::NodeHandle nh,
   return std::unique_ptr<BaseControllerVisualizer<StateType, InputType>>(nullptr);
 };
 
-//#ifdef pacejka_model_FOUND
+#ifdef pacejka_model_FOUND
 // Shorten type names
 typedef crs_msgs::car_state_cart ros_car_state;
 typedef crs_msgs::car_input ros_car_input;
@@ -142,7 +142,7 @@ inline pacejka_ros_controller* getPacejkaConstReferencePidController(ros::NodeHa
   return new pacejka_ros_controller(nh, nh_private, std::move(visualizer_ptr), derived_ptr);
 }
 
-//#endif  // pid_controller_FOUND
+#endif  // pid_controller_FOUND
 
 // =============================================================================================
 // ===============                FF FB CONTROLLER                  ============================

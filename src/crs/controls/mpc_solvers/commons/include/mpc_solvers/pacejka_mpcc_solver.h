@@ -33,12 +33,12 @@ enum vars
  */
 enum params
 {
-  X_LIN,
-  Y_LIN,
-  GRAD_X_LIN,
-  GRAD_Y_LIN,
-  THETA_PRED,
-  PHI_LIN,
+  // X_LIN,
+  // Y_LIN,
+  // GRAD_X_LIN,
+  // GRAD_Y_LIN,
+  // THETA_PRED,
+  // PHI_LIN,
   Q1,
   Q2,
   R1,

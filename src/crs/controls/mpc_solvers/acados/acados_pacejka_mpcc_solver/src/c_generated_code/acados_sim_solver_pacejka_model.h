@@ -40,7 +40,7 @@
 #define PACEJKA_MODEL_NX     9
 #define PACEJKA_MODEL_NZ     0
 #define PACEJKA_MODEL_NU     3
-#define PACEJKA_MODEL_NP     26
+#define PACEJKA_MODEL_NP     20
 
 #ifdef __cplusplus
 extern "C" {

@@ -31,7 +31,7 @@ private:
    * @brief Numbers of parameters
    *
    */
-  const static int np_ = 26;
+  const static int np_ = 20;
 
   double mpc_parameters[np_];
 

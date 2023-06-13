@@ -24,6 +24,8 @@ extern "C" {
 #endif
 
 /* Add prefix to internal symbols */
+#define casadi_clear CASADI_PREFIX(clear)
+#define casadi_copy CASADI_PREFIX(copy)
 #define casadi_f0 CASADI_PREFIX(f0)
 #define casadi_s0 CASADI_PREFIX(s0)
 #define casadi_s1 CASADI_PREFIX(s1)
@@ -46,26 +48,41 @@ extern "C" {
   #endif
 #endif
 
+void casadi_clear(casadi_real* x, casadi_int n) {
+  casadi_int i;
+  if (x) {
+    for (i=0; i<n; ++i) *x++ = 0;
+  }
+}
+
+void casadi_copy(const casadi_real* x, casadi_int n, casadi_real* y) {
+  casadi_int i;
+  if (y) {
+    if (x) {
+      for (i=0; i<n; ++i) *y++ = *x++;
+    } else {
+      for (i=0; i<n; ++i) *y++ = 0.;
+    }
+  }
+}
+
 static const casadi_int casadi_s0[13] = {9, 1, 0, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8};
 static const casadi_int casadi_s1[3] = {0, 0, 0};
-static const casadi_int casadi_s2[30] = {26, 1, 0, 26, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
+static const casadi_int casadi_s2[24] = {20, 1, 0, 20, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
 static const casadi_int casadi_s3[5] = {1, 1, 0, 1, 0};
 static const casadi_int casadi_s4[12] = {9, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-/* pacejka_model_cost_ext_cost_e_fun_jac_hess:(i0[9],i1[],i2[26])->(o0,o1[9],o2[9x9,0nz]) */
+/* pacejka_model_cost_ext_cost_e_fun_jac_hess:(i0[9],i1[],i2[20])->(o0,o1[9],o2[9x9,0nz]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, int mem) {
-  casadi_real a0;
-  a0=0.;
-  if (res[0]!=0) res[0][0]=a0;
-  if (res[1]!=0) res[1][0]=a0;
-  if (res[1]!=0) res[1][1]=a0;
-  if (res[1]!=0) res[1][2]=a0;
-  if (res[1]!=0) res[1][3]=a0;
-  if (res[1]!=0) res[1][4]=a0;
-  if (res[1]!=0) res[1][5]=a0;
-  if (res[1]!=0) res[1][6]=a0;
-  if (res[1]!=0) res[1][7]=a0;
-  if (res[1]!=0) res[1][8]=a0;
+  casadi_real w0, *w1=w+1;
+  /* #0: @0 = 0 */
+  w0 = 0.;
+  /* #1: output[0][0] = @0 */
+  if (res[0]) res[0][0] = w0;
+  /* #2: @1 = zeros(9x1) */
+  casadi_clear(w1, 9);
+  /* #3: output[1][0] = @1 */
+  casadi_copy(w1, 9, res[1]);
   return 0;
 }
 
@@ -145,9 +162,9 @@ CASADI_SYMBOL_EXPORT const casadi_int* pacejka_model_cost_ext_cost_e_fun_jac_hes
 
 CASADI_SYMBOL_EXPORT int pacejka_model_cost_ext_cost_e_fun_jac_hess_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
   if (sz_arg) *sz_arg = 3;
-  if (sz_res) *sz_res = 3;
+  if (sz_res) *sz_res = 4;
   if (sz_iw) *sz_iw = 0;
-  if (sz_w) *sz_w = 0;
+  if (sz_w) *sz_w = 10;
   return 0;
 }
 

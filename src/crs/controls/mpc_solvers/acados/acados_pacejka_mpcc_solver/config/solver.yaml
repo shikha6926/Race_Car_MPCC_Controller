@@ -24,7 +24,6 @@ model_bounds:
     dyaw_min: -4.0
     dyaw_max: 4.0
 
-    
     delta_min: -0.4
     delta_max: 0.4
 

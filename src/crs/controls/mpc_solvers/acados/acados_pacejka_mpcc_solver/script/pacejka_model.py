@@ -2,6 +2,8 @@ import math
 import numpy as np
 from casadi import *
 from typing import Dict
+import yaml
+from yaml.loader import SafeLoader
 
 def pacejka_model(constraints: Dict[str, float]):
 
@@ -35,33 +37,33 @@ def pacejka_model(constraints: Dict[str, float]):
     model.dT_max = constraints["dT_max"]
     model.dtheta_min = constraints["dtheta_min"]
     model.dtheta_max = constraints["dtheta_max"]
-
+    
     """ Dynamics """
     # CasADi - states
-    xp = SX.sym("xp")
-    yp = SX.sym("yp")
-    yaw = SX.sym("yaw")
-    vx = SX.sym("vx")
-    vy = SX.sym("vy")
-    omega = SX.sym("omega")
-    T = SX.sym("T")
-    delta = SX.sym("delta")
-    theta = SX.sym("theta")
+    xp = MX.sym("xp")
+    yp = MX.sym("yp")
+    yaw = MX.sym("yaw")
+    vx = MX.sym("vx")
+    vy = MX.sym("vy")
+    omega = MX.sym("omega")
+    T = MX.sym("T")
+    delta = MX.sym("delta")
+    theta = MX.sym("theta")
     x = vertcat(xp, yp, yaw, vx, vy, omega, T, delta, theta)
 
     # CasADi - input
-    dT = SX.sym("dT")
-    ddelta = SX.sym("ddelta")
-    dtheta = SX.sym("dtheta")
+    dT = MX.sym("dT")
+    ddelta = MX.sym("ddelta")
+    dtheta = MX.sym("dtheta")
     u = vertcat(dT, ddelta, dtheta)
 
     # xdot
-    xpdot = SX.sym("xpdot")
-    ypdot = SX.sym("ypdot")
-    yawdot = SX.sym("yawdot")
-    vxdot = SX.sym("vxdot")
-    vydot = SX.sym("vydot")
-    omegadot = SX.sym("omegadot")
+    xpdot = MX.sym("xpdot")
+    ypdot = MX.sym("ypdot")
+    yawdot = MX.sym("yawdot")
+    vxdot = MX.sym("vxdot")
+    vydot = MX.sym("vydot")
+    omegadot = MX.sym("omegadot")
     xdot = vertcat(xpdot, ypdot, yawdot, vxdot, vydot,
                    omegadot, dT, ddelta, dtheta)
 
@@ -69,36 +71,37 @@ def pacejka_model(constraints: Dict[str, float]):
     z = vertcat([])
 
     # define params
-    xd = SX.sym("xd")
-    yd = SX.sym("yd")
-    grad_xd = SX.sym("grad_xd")
-    grad_yd = SX.sym("grad_yd")
-    theta_hat = SX.sym("theta_hat")
-    phi_d = SX.sym("phi_d")
-    Q1 = SX.sym("Q1")
-    Q2 = SX.sym("Q2")
-    R1 = SX.sym("R1")
-    R2 = SX.sym("R2")
-    R3 = SX.sym("R3")
-    q = SX.sym("q")
-    lr = SX.sym("lr")
-    lf = SX.sym("lf")
-    m = SX.sym("m")
-    I = SX.sym("I")
-    Df = SX.sym("Df")
-    Cf = SX.sym("Cf")
-    Bf = SX.sym("Bf")
-    Dr = SX.sym("Dr")
-    Cr = SX.sym("Cr")
-    Br = SX.sym("Br")
-    Cm1 = SX.sym("Cm1")
-    Cm2 = SX.sym("Cm2")
-    Cd = SX.sym("Cd")
-    Croll = SX.sym("Croll")
+    xd = MX.sym("xd")
+    yd = MX.sym("yd")
+    grad_xd = MX.sym("grad_xd")
+    grad_yd = MX.sym("grad_yd")
+    # theta_hat = MX.sym("theta_hat")
+    phi_d = MX.sym("phi_d")
+    Q1 = MX.sym("Q1")
+    Q2 = MX.sym("Q2")
+    R1 = MX.sym("R1")
+    R2 = MX.sym("R2")
+    R3 = MX.sym("R3")
+    q = MX.sym("q")
+    lr = MX.sym("lr")
+    lf = MX.sym("lf")
+    m = MX.sym("m")
+    I = MX.sym("I")
+    Df = MX.sym("Df")
+    Cf = MX.sym("Cf")
+    Bf = MX.sym("Bf")
+    Dr = MX.sym("Dr")
+    Cr = MX.sym("Cr")
+    Br = MX.sym("Br")
+    Cm1 = MX.sym("Cm1")
+    Cm2 = MX.sym("Cm2")
+    Cd = MX.sym("Cd")
+    Croll = MX.sym("Croll")
 
     # parameters
-    p = vertcat(xd, yd, grad_xd, grad_yd, theta_hat, phi_d, Q1, Q2, R1,
-                R2, R3, q, lr, lf, m, I, Df, Cf, Bf, Dr, Cr, Br, Cm1, Cm2, Cd, Croll)
+    # p = vertcat(xd, yd, grad_xd, grad_yd, theta_hat, phi_d, Q1, Q2, R1,
+    #             R2, R3, q, lr, lf, m, I, Df, Cf, Bf, Dr, Cr, Br, Cm1, Cm2, Cd, Croll)
+    p = vertcat(Q1, Q2, R1, R2, R3, q, lr, lf, m, I, Df, Cf, Bf, Dr, Cr, Br, Cm1, Cm2, Cd, Croll)
 
     # dynamics
     Fx = (Cm1 - Cm2 * vx) * T - Cd * vx * vx - Croll
@@ -119,11 +122,48 @@ def pacejka_model(constraints: Dict[str, float]):
         dtheta,
     )
 
+    #Load coefficients of spline from yaml file
+    with open('/code/src/crs/controls/mpc_solvers/acados/acados_pacejka_mpcc_solver/script/fulltrack_spline.yaml', 'r') as f:
+        data = yaml.load(f, Loader=SafeLoader)
+    
+    # Convert data to [x_a[spline_idx], x_b[spline_idx], x_c[spline_idx], x_d[spline_idx]]
+    x_coef = np.vstack((data['X_a'], data['X_b'], data['X_c'], data['X_d'])).T
+    y_coef = np.vstack((data['Y_a'], data['Y_b'], data['Y_c'], data['Y_d'])).T
+    x_coef = x_coef.tolist()
+    y_coef = y_coef.tolist()
+
+    # Casadi variables to extract coefficients
+    spline_x_coef = MX(DM(x_coef))
+    spline_y_coef = MX(DM(y_coef))
+
+    # Get spline index based on density i.e 3.0 and distance on track(s)
+    density = 2.993
+    idx = floor(fmod(theta, 13.28152)  * density)
+    # Extract spline coefficien based on spline idx
+    coef_xd = spline_x_coef[idx, :].T
+    coef_yd = spline_y_coef[idx, :].T
+
+    # Get desired x,y coordinate of center line of track from spline equations
+    # xd = dot(coef_xd, (theta_hat - (idx * 0.334))**DM(range(4)))
+     # yd = dot(coef_yd, (theta_hat - (idx * 0.334))**DM(range(4)))
+    # x_grad = dot(coef_xd[1:4], (( theta_hat - (idx * 0.334))**DM(range(3)))*DM(range(1, 4)))
+    # y_grad = dot(coef_yd[1:4], ((theta_hat - (idx * 0.334))**DM(range(3)))*DM(range(1, 4)))
+
+    distance = fmod(theta, 13.28152) -  (idx * 0.334)
+    xd = coef_xd[0] + (coef_xd[1] * distance) + (coef_xd[2] * (distance**2)) + (coef_xd[3] * (distance**3))
+    yd = coef_yd[0] + (coef_yd[1] * distance) + (coef_yd[2] * (distance**2)) + (coef_yd[3] * (distance**3))
+    grad_xd = coef_xd[1] + (2 * coef_xd[2] * distance) + (3 * coef_xd[3] * distance**2)
+    grad_yd = coef_yd[1] + (2 * coef_yd[2] * distance) + (3 * coef_yd[3] * distance**2)
+    phi_d = casadi.arctan2(grad_yd, grad_xd) + floor(theta / 13.28152) * 2 * pi
+
+    # Casadi function input: predicted distance_on_track, output: desired x,y on center line of track
+    get_xref = Function('get_xref', [theta], [xd], ['theta_hat'], ['xref'])
+    get_yref = Function('get_yref', [theta], [yd], ['theta_hat'], ['yref'])
+    get_phiref = Function('get_phiref', [theta], [phi_d], ['theta_hat'], ['phiref'])
+    
     # cost
-    eC = sin(phi_d)*(xp-xd-grad_xd*(theta-theta_hat)) - \
-        cos(phi_d)*(yp-yd-grad_yd*(theta-theta_hat))
-    eL = -cos(phi_d)*(xp-xd-grad_xd*(theta-theta_hat)) - \
-        sin(phi_d)*(yp-yd-grad_yd*(theta-theta_hat))
+    eC = sin(get_phiref(theta)) * (xp - get_xref(theta)) - cos(get_phiref(theta)) * (yp - get_yref(theta))
+    eL = -cos(get_phiref(theta)) * (xp -  get_xref(theta)) - sin(get_phiref(theta)) * (yp - get_yref(theta))
 
     c_eC = eC*eC*Q1
     c_eL = eL*eL*Q2
@@ -132,19 +172,33 @@ def pacejka_model(constraints: Dict[str, float]):
     c_ddelta = ddelta*ddelta*R2
     c_dtheta = dtheta*dtheta*R3
 
-    model.cost_expr_ext_cost = c_eC + c_eL + c_theta + c_dT + c_ddelta + c_dtheta
+    model.cost_expr_ext_cost = c_eC  + c_theta + c_dT + c_ddelta + c_dtheta
 
     # nonlinear track constraints
-    radius_sq = (xp - xd)*(xp - xd) + (yp - yd)*(yp - yd)
-    constraint.expr = vertcat(radius_sq)
+    # inner and outer track boundary given width of track
+    # track_width = 0.85
+    # r = track_width / 2
+    # x_pos_out = xd + r * (-grad_yd)
+    # y_pos_out = yd + r * grad_xd
+
+    # x_pos_in = xd - r * (-grad_yd)
+    # y_pos_in = yd - r * grad_xd
+
+    # # Compute lower and upper track bounds
+
+    # track_constraint_lower = (-grad_yd) * x_pos_in + grad_xd * y_pos_in 
+    # track_constraint_upper = (-grad_yd) * x_pos_out + grad_xd * y_pos_out
+    
+    radius_sq = (xp - get_xref(theta))*(xp - get_xref(theta)) + (yp - get_yref(theta))*(yp - get_yref(theta))
+    constraint.expr = vertcat(eL)
 
     params = types.SimpleNamespace()
-    params.xd = xd
-    params.yd = yd
-    params.grad_xd = grad_xd
-    params.grad_yd = grad_yd
-    params.phi_d = phi_d
-    params.theta_hat = theta_hat
+    # params.xd = xref
+    # params.yd = yref
+    # params.grad_xd = grad_xref
+    # params.grad_yd = grad_yref
+    # params.phi_d = phiref
+    # params.theta_hat = theta_hat
     params.Q1 = Q1
     params.Q2 = Q2
     params.R1 = R1

@@ -75,12 +75,20 @@ def build_acados_solver(N: int, Ts: float, acados_source_path: str, model):
     ocp.model.cost_expr_ext_cost = model.cost_expr_ext_cost
     ocp.model.cost_expr_ext_cost_e = 0
 
-    ocp.constraints.lh = np.array([0.0])
-    ocp.constraints.uh = np.array([0.15 * 0.15])
+    
+    ocp.constraints.lh = np.array([-1.0])
+    ocp.constraints.uh = np.array([1.0])
 
     ocp.constraints.lsh = np.zeros(ocp.dims.nsh)
     ocp.constraints.ush = np.zeros(ocp.dims.nsh)
     ocp.constraints.idxsh = np.array([0])
+
+    # track_radius = 0.85/2
+    # ocp.constraints.lh = np.array([-track_radius, -track_radius])
+    # ocp.constraints.uh = np.array([track_radius,  track_radius])
+    # ocp.constraints.lsh = np.zeros(ocp.dims.nsh)
+    # ocp.constraints.ush = np.zeros(ocp.dims.nsh)
+    # ocp.constraints.idxsh = np.array([0, 1])
 
     ocp.constraints.lsbx = np.zeros(ocp.dims.nsbx)
     ocp.constraints.usbx = np.zeros(ocp.dims.nsbx)

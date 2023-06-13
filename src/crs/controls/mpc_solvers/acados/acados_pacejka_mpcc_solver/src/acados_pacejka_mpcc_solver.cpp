@@ -114,12 +114,12 @@ void AcadosPacejkaMpccSolver::updateParams(int stage, const crs_models::pacejka_
 {
   double params[np_];
   // Tracking
-  mpc_parameters[params::X_LIN] = tracking_point.x;
-  mpc_parameters[params::Y_LIN] = tracking_point.y;
-  mpc_parameters[params::GRAD_X_LIN] = tracking_point.grad_x;
-  mpc_parameters[params::GRAD_Y_LIN] = tracking_point.grad_y;
-  mpc_parameters[params::THETA_PRED] = tracking_point.theta;
-  mpc_parameters[params::PHI_LIN] = tracking_point.phi;
+  // mpc_parameters[params::X_LIN] = tracking_point.x;
+  // mpc_parameters[params::Y_LIN] = tracking_point.y;
+  // mpc_parameters[params::GRAD_X_LIN] = tracking_point.grad_x;
+  // mpc_parameters[params::GRAD_Y_LIN] = tracking_point.grad_y;
+  // mpc_parameters[params::THETA_PRED] = tracking_point.theta;
+  // mpc_parameters[params::PHI_LIN] = tracking_point.phi;
   // Costs
   mpc_parameters[params::Q1] = costs.Q1;
   mpc_parameters[params::Q2] = costs.Q2;

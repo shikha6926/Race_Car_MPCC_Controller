@@ -8,7 +8,6 @@
 #include "acados_pacejka_mpcc_solver/acados_pacejka_mpcc_solver.h"
 #endif
 
-
 namespace crs_controls
 {
 
@@ -167,13 +166,9 @@ void PacejkaMpccController::initialize(crs_models::pacejka_model::pacejka_car_st
   {
     for (int stage = 0; stage < solver_->getHorizonLength(); stage++)
     {
-      // std::cout << "Theta from static track:" << theta_ << "\n";
-      // std::cout << "Spline index:" << Spline_index << "\n";
-      // std::cout << "Theta from spline:" << theta_spline << "\n";
       // Ugly indexing to get distance on track of predicted solution
       double distance_on_track = last_solution.states_[stage * solver_->getStateDimension() + pacejka_vars::THETA];
-      // Convert it to track indice using density of track points which are regularly sampled
-    
+      
       // Update tracking point based on predicted distance on track
       mpc_solvers::pacejka_solvers::trajectory_track_point track_point;
      
@@ -231,6 +226,8 @@ crs_models::pacejka_model::pacejka_car_input PacejkaMpccController::getControlIn
   
   // theta_ = getStaticTrack()->getArcLength(
   //     getStaticTrack()->getClosestTrackPointIdx(Eigen::Vector2d(virtual_state.pos_x, virtual_state.pos_y)));
+  // int spline_index = spline_track.getclosestsplineindex(Eigen::Vector2d(virtual_state.pos_x, virtual_state.pos_y), spline_track);
+  // theta_ = spline_track.gettheta(spline_index, Eigen::Vector2d(virtual_state.pos_x, virtual_state.pos_y), spline_track);
 
   double x0[] = {
     virtual_state.pos_x, virtual_state.pos_y, virtual_state.yaw,
@@ -255,7 +252,7 @@ crs_models::pacejka_model::pacejka_car_input PacejkaMpccController::getControlIn
     // Ugly indexing to get distance on track of predicted solution
     double distance_on_track = last_solution.states_[next_stage * solver_->getStateDimension() + pacejka_vars::THETA] -
                                laps_ * spline_track.getMaxArcLength();
-    // Convert it to track indice using density of track points which are regularly sampled
+   
     // Update tracking point based on predicted distance on track
     mpc_solvers::pacejka_solvers::trajectory_track_point track_point;
   
@@ -264,7 +261,13 @@ crs_models::pacejka_model::pacejka_car_input PacejkaMpccController::getControlIn
     track_point.grad_x = spline_track.getGradient(distance_on_track).x();
     track_point.grad_y = spline_track.getGradient(distance_on_track).y();
     track_point.theta = distance_on_track + laps_ * spline_track.getMaxArcLength();
-    track_point.phi = spline_track.getTangentAngle(track_point.grad_y, track_point.grad_x); + laps_ * 2 * M_PI;
+    track_point.phi = spline_track.getTangentAngle(track_point.grad_y, track_point.grad_x) + laps_ * 2 * M_PI;
+
+    std::cout << "Control input x:" << track_point.x << "\n";
+    std::cout << "Control input y :" << track_point.y << "\n";
+    std::cout << "Control input phi:" << track_point.phi << "\n"; 
+    std::cout << "Control input theta:" << track_point.theta << "\n";
+
     // Update reference visualization
     last_solution.reference_on_track_[current_stage] = Eigen::Vector3d(track_point.x, track_point.y, track_point.phi);
 

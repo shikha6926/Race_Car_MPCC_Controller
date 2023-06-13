@@ -92,7 +92,7 @@ input_note = strcat(input_note, num2str(i_in), ') ubx_0 - upper bound on x for s
                     ' size [9]\n ');
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') parameters - concatenated for all shooting nodes 0 to N+1,',...
-                    ' size [1066]\n ');
+                    ' size [820]\n ');
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') lbx for shooting nodes 1 to N-1, size [351]\n ');
 i_in = i_in + 1;

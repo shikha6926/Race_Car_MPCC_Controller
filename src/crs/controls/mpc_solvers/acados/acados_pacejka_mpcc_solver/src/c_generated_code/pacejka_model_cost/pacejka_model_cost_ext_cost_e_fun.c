@@ -47,14 +47,16 @@ extern "C" {
 
 static const casadi_int casadi_s0[13] = {9, 1, 0, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8};
 static const casadi_int casadi_s1[3] = {0, 0, 0};
-static const casadi_int casadi_s2[30] = {26, 1, 0, 26, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
+static const casadi_int casadi_s2[24] = {20, 1, 0, 20, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
 static const casadi_int casadi_s3[5] = {1, 1, 0, 1, 0};
 
-/* pacejka_model_cost_ext_cost_e_fun:(i0[9],i1[],i2[26])->(o0) */
+/* pacejka_model_cost_ext_cost_e_fun:(i0[9],i1[],i2[20])->(o0) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, int mem) {
-  casadi_real a0;
-  a0=0.;
-  if (res[0]!=0) res[0][0]=a0;
+  casadi_real w0;
+  /* #0: @0 = 0 */
+  w0 = 0.;
+  /* #1: output[0][0] = @0 */
+  if (res[0]) res[0][0] = w0;
   return 0;
 }
 
@@ -130,9 +132,9 @@ CASADI_SYMBOL_EXPORT const casadi_int* pacejka_model_cost_ext_cost_e_fun_sparsit
 
 CASADI_SYMBOL_EXPORT int pacejka_model_cost_ext_cost_e_fun_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
   if (sz_arg) *sz_arg = 3;
-  if (sz_res) *sz_res = 1;
+  if (sz_res) *sz_res = 2;
   if (sz_iw) *sz_iw = 0;
-  if (sz_w) *sz_w = 0;
+  if (sz_w) *sz_w = 1;
   return 0;
 }
 

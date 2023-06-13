@@ -117,12 +117,6 @@ int main()
     p[17] = 0;
     p[18] = 0;
     p[19] = 0;
-    p[20] = 0;
-    p[21] = 0;
-    p[22] = 0;
-    p[23] = 0;
-    p[24] = 0;
-    p[25] = 0;
 
     pacejka_model_acados_sim_update_params(capsule, p, NP);
   

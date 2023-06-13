@@ -297,7 +297,7 @@ int pacejka_model_acados_create_with_discretization(pacejka_model_solver_capsule
         capsule->nl_constr_h_fun_jac[i].casadi_sparsity_in = &pacejka_model_constr_h_fun_jac_uxt_zt_sparsity_in;
         capsule->nl_constr_h_fun_jac[i].casadi_sparsity_out = &pacejka_model_constr_h_fun_jac_uxt_zt_sparsity_out;
         capsule->nl_constr_h_fun_jac[i].casadi_work = &pacejka_model_constr_h_fun_jac_uxt_zt_work;
-        external_function_param_casadi_create(&capsule->nl_constr_h_fun_jac[i], 26);
+        external_function_param_casadi_create(&capsule->nl_constr_h_fun_jac[i], 20);
     }
     capsule->nl_constr_h_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
@@ -307,7 +307,7 @@ int pacejka_model_acados_create_with_discretization(pacejka_model_solver_capsule
         capsule->nl_constr_h_fun[i].casadi_sparsity_in = &pacejka_model_constr_h_fun_sparsity_in;
         capsule->nl_constr_h_fun[i].casadi_sparsity_out = &pacejka_model_constr_h_fun_sparsity_out;
         capsule->nl_constr_h_fun[i].casadi_work = &pacejka_model_constr_h_fun_work;
-        external_function_param_casadi_create(&capsule->nl_constr_h_fun[i], 26);
+        external_function_param_casadi_create(&capsule->nl_constr_h_fun[i], 20);
     }
     
     
@@ -322,7 +322,7 @@ int pacejka_model_acados_create_with_discretization(pacejka_model_solver_capsule
         capsule->forw_vde_casadi[i].casadi_sparsity_in = &pacejka_model_expl_vde_forw_sparsity_in;
         capsule->forw_vde_casadi[i].casadi_sparsity_out = &pacejka_model_expl_vde_forw_sparsity_out;
         capsule->forw_vde_casadi[i].casadi_work = &pacejka_model_expl_vde_forw_work;
-        external_function_param_casadi_create(&capsule->forw_vde_casadi[i], 26);
+        external_function_param_casadi_create(&capsule->forw_vde_casadi[i], 20);
     }
 
     capsule->expl_ode_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
@@ -333,7 +333,7 @@ int pacejka_model_acados_create_with_discretization(pacejka_model_solver_capsule
         capsule->expl_ode_fun[i].casadi_sparsity_in = &pacejka_model_expl_ode_fun_sparsity_in;
         capsule->expl_ode_fun[i].casadi_sparsity_out = &pacejka_model_expl_ode_fun_sparsity_out;
         capsule->expl_ode_fun[i].casadi_work = &pacejka_model_expl_ode_fun_work;
-        external_function_param_casadi_create(&capsule->expl_ode_fun[i], 26);
+        external_function_param_casadi_create(&capsule->expl_ode_fun[i], 20);
     }
 
 
@@ -346,7 +346,7 @@ int pacejka_model_acados_create_with_discretization(pacejka_model_solver_capsule
     capsule->ext_cost_0_fun.casadi_sparsity_out = &pacejka_model_cost_ext_cost_0_fun_sparsity_out;
     capsule->ext_cost_0_fun.casadi_work = &pacejka_model_cost_ext_cost_0_fun_work;
     
-    external_function_param_casadi_create(&capsule->ext_cost_0_fun, 26);
+    external_function_param_casadi_create(&capsule->ext_cost_0_fun, 20);
 
     // external cost
     
@@ -357,7 +357,7 @@ int pacejka_model_acados_create_with_discretization(pacejka_model_solver_capsule
     capsule->ext_cost_0_fun_jac.casadi_sparsity_out = &pacejka_model_cost_ext_cost_0_fun_jac_sparsity_out;
     capsule->ext_cost_0_fun_jac.casadi_work = &pacejka_model_cost_ext_cost_0_fun_jac_work;
     
-    external_function_param_casadi_create(&capsule->ext_cost_0_fun_jac, 26);
+    external_function_param_casadi_create(&capsule->ext_cost_0_fun_jac, 20);
 
     // external cost
     
@@ -368,7 +368,7 @@ int pacejka_model_acados_create_with_discretization(pacejka_model_solver_capsule
     capsule->ext_cost_0_fun_jac_hess.casadi_sparsity_out = &pacejka_model_cost_ext_cost_0_fun_jac_hess_sparsity_out;
     capsule->ext_cost_0_fun_jac_hess.casadi_work = &pacejka_model_cost_ext_cost_0_fun_jac_hess_work;
     
-    external_function_param_casadi_create(&capsule->ext_cost_0_fun_jac_hess, 26);
+    external_function_param_casadi_create(&capsule->ext_cost_0_fun_jac_hess, 20);
     // external cost
     capsule->ext_cost_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N-1; i++)
@@ -381,7 +381,7 @@ int pacejka_model_acados_create_with_discretization(pacejka_model_solver_capsule
         capsule->ext_cost_fun[i].casadi_sparsity_out = &pacejka_model_cost_ext_cost_fun_sparsity_out;
         capsule->ext_cost_fun[i].casadi_work = &pacejka_model_cost_ext_cost_fun_work;
         
-        external_function_param_casadi_create(&capsule->ext_cost_fun[i], 26);
+        external_function_param_casadi_create(&capsule->ext_cost_fun[i], 20);
     }
 
     capsule->ext_cost_fun_jac = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
@@ -395,7 +395,7 @@ int pacejka_model_acados_create_with_discretization(pacejka_model_solver_capsule
         capsule->ext_cost_fun_jac[i].casadi_sparsity_out = &pacejka_model_cost_ext_cost_fun_jac_sparsity_out;
         capsule->ext_cost_fun_jac[i].casadi_work = &pacejka_model_cost_ext_cost_fun_jac_work;
         
-        external_function_param_casadi_create(&capsule->ext_cost_fun_jac[i], 26);
+        external_function_param_casadi_create(&capsule->ext_cost_fun_jac[i], 20);
     }
 
     capsule->ext_cost_fun_jac_hess = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
@@ -409,7 +409,7 @@ int pacejka_model_acados_create_with_discretization(pacejka_model_solver_capsule
         capsule->ext_cost_fun_jac_hess[i].casadi_sparsity_out = &pacejka_model_cost_ext_cost_fun_jac_hess_sparsity_out;
         capsule->ext_cost_fun_jac_hess[i].casadi_work = &pacejka_model_cost_ext_cost_fun_jac_hess_work;
         
-        external_function_param_casadi_create(&capsule->ext_cost_fun_jac_hess[i], 26);
+        external_function_param_casadi_create(&capsule->ext_cost_fun_jac_hess[i], 20);
     }
     // external cost
     
@@ -420,7 +420,7 @@ int pacejka_model_acados_create_with_discretization(pacejka_model_solver_capsule
     capsule->ext_cost_e_fun.casadi_sparsity_out = &pacejka_model_cost_ext_cost_e_fun_sparsity_out;
     capsule->ext_cost_e_fun.casadi_work = &pacejka_model_cost_ext_cost_e_fun_work;
     
-    external_function_param_casadi_create(&capsule->ext_cost_e_fun, 26);
+    external_function_param_casadi_create(&capsule->ext_cost_e_fun, 20);
 
     // external cost
     
@@ -431,7 +431,7 @@ int pacejka_model_acados_create_with_discretization(pacejka_model_solver_capsule
     capsule->ext_cost_e_fun_jac.casadi_sparsity_out = &pacejka_model_cost_ext_cost_e_fun_jac_sparsity_out;
     capsule->ext_cost_e_fun_jac.casadi_work = &pacejka_model_cost_ext_cost_e_fun_jac_work;
     
-    external_function_param_casadi_create(&capsule->ext_cost_e_fun_jac, 26);
+    external_function_param_casadi_create(&capsule->ext_cost_e_fun_jac, 20);
 
     // external cost
     
@@ -442,7 +442,7 @@ int pacejka_model_acados_create_with_discretization(pacejka_model_solver_capsule
     capsule->ext_cost_e_fun_jac_hess.casadi_sparsity_out = &pacejka_model_cost_ext_cost_e_fun_jac_hess_sparsity_out;
     capsule->ext_cost_e_fun_jac_hess.casadi_work = &pacejka_model_cost_ext_cost_e_fun_jac_hess_work;
     
-    external_function_param_casadi_create(&capsule->ext_cost_e_fun_jac_hess, 26);
+    external_function_param_casadi_create(&capsule->ext_cost_e_fun_jac_hess, 20);
 
     /************************************************
     *  nlp_in
@@ -739,9 +739,10 @@ int pacejka_model_acados_create_with_discretization(pacejka_model_solver_capsule
     double* uh = luh + NH;
 
     
+    lh[0] = -1;
 
     
-    uh[0] = 0.0225;
+    uh[0] = 1;
     
     for (int i = 0; i < N; i++)
     {
@@ -899,7 +900,7 @@ int pacejka_model_acados_update_params(pacejka_model_solver_capsule * capsule, i
 {
     int solver_status = 0;
 
-    int casadi_np = 26;
+    int casadi_np = 20;
     if (casadi_np != np) {
         printf("acados_update_params: trying to set %i parameters for external functions."
             " External function has %i parameters. Exiting.\n", np, casadi_np);
