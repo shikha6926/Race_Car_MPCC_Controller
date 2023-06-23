@@ -71,11 +71,11 @@ def pacejka_model(constraints: Dict[str, float]):
     z = vertcat([])
 
     # define params
+    # d subscript parameters are for the desired trajectory(center line or reference trajectory)
     xd = MX.sym("xd")
     yd = MX.sym("yd")
     grad_xd = MX.sym("grad_xd")
     grad_yd = MX.sym("grad_yd")
-    # theta_hat = MX.sym("theta_hat")
     phi_d = MX.sym("phi_d")
     Q1 = MX.sym("Q1")
     Q2 = MX.sym("Q2")
@@ -99,8 +99,6 @@ def pacejka_model(constraints: Dict[str, float]):
     Croll = MX.sym("Croll")
 
     # parameters
-    # p = vertcat(xd, yd, grad_xd, grad_yd, theta_hat, phi_d, Q1, Q2, R1,
-    #             R2, R3, q, lr, lf, m, I, Df, Cf, Bf, Dr, Cr, Br, Cm1, Cm2, Cd, Croll)
     p = vertcat(Q1, Q2, R1, R2, R3, q, lr, lf, m, I, Df, Cf, Bf, Dr, Cr, Br, Cm1, Cm2, Cd, Croll)
 
     # dynamics
@@ -122,8 +120,8 @@ def pacejka_model(constraints: Dict[str, float]):
         dtheta,
     )
 
-    #Load coefficients of spline from yaml file
-    with open('/code/src/crs/controls/mpc_solvers/acados/acados_pacejka_mpcc_solver/script/fulltrack_spline.yaml', 'r') as f:
+    #Load coefficients of piecewise splines from yaml file
+    with open('/code/src/crs/controls/mpc_solvers/acados/acados_pacejka_mpcc_solver/script/spline_yaml/fulltrack_spline.yaml', 'r') as f:
         data = yaml.load(f, Loader=SafeLoader)
     
     # Convert data to [x_a[spline_idx], x_b[spline_idx], x_c[spline_idx], x_d[spline_idx]]
@@ -137,24 +135,19 @@ def pacejka_model(constraints: Dict[str, float]):
     spline_y_coef = MX(DM(y_coef))
 
     # Get spline index based on density i.e 3.0 and distance on track(s)
-    density = 2.993
+    density = 3.011
     idx = floor(fmod(theta, 13.28152)  * density)
     # Extract spline coefficien based on spline idx
     coef_xd = spline_x_coef[idx, :].T
     coef_yd = spline_y_coef[idx, :].T
 
     # Get desired x,y coordinate of center line of track from spline equations
-    # xd = dot(coef_xd, (theta_hat - (idx * 0.334))**DM(range(4)))
-     # yd = dot(coef_yd, (theta_hat - (idx * 0.334))**DM(range(4)))
-    # x_grad = dot(coef_xd[1:4], (( theta_hat - (idx * 0.334))**DM(range(3)))*DM(range(1, 4)))
-    # y_grad = dot(coef_yd[1:4], ((theta_hat - (idx * 0.334))**DM(range(3)))*DM(range(1, 4)))
-
-    distance = fmod(theta, 13.28152) -  (idx * 0.334)
+    distance = fmod(theta, 13.28152) -  (idx * 0.332)
     xd = coef_xd[0] + (coef_xd[1] * distance) + (coef_xd[2] * (distance**2)) + (coef_xd[3] * (distance**3))
     yd = coef_yd[0] + (coef_yd[1] * distance) + (coef_yd[2] * (distance**2)) + (coef_yd[3] * (distance**3))
     grad_xd = coef_xd[1] + (2 * coef_xd[2] * distance) + (3 * coef_xd[3] * distance**2)
     grad_yd = coef_yd[1] + (2 * coef_yd[2] * distance) + (3 * coef_yd[3] * distance**2)
-    phi_d = casadi.arctan2(grad_yd, grad_xd) + floor(theta / 13.28152) * 2 * pi
+    phi_d = casadi.arctan2(grad_yd, grad_xd)
 
     # Casadi function input: predicted distance_on_track, output: desired x,y on center line of track
     get_xref = Function('get_xref', [theta], [xd], ['theta_hat'], ['xref'])
@@ -172,33 +165,12 @@ def pacejka_model(constraints: Dict[str, float]):
     c_ddelta = ddelta*ddelta*R2
     c_dtheta = dtheta*dtheta*R3
 
-    model.cost_expr_ext_cost = c_eC  + c_theta + c_dT + c_ddelta + c_dtheta
+    model.cost_expr_ext_cost = c_theta + c_dT + c_ddelta 
 
-    # nonlinear track constraints
-    # inner and outer track boundary given width of track
-    # track_width = 0.85
-    # r = track_width / 2
-    # x_pos_out = xd + r * (-grad_yd)
-    # y_pos_out = yd + r * grad_xd
-
-    # x_pos_in = xd - r * (-grad_yd)
-    # y_pos_in = yd - r * grad_xd
-
-    # # Compute lower and upper track bounds
-
-    # track_constraint_lower = (-grad_yd) * x_pos_in + grad_xd * y_pos_in 
-    # track_constraint_upper = (-grad_yd) * x_pos_out + grad_xd * y_pos_out
-    
-    radius_sq = (xp - get_xref(theta))*(xp - get_xref(theta)) + (yp - get_yref(theta))*(yp - get_yref(theta))
-    constraint.expr = vertcat(eL)
+    # radius_sq = (xp - get_xref(theta))*(xp - get_xref(theta)) + (yp - get_yref(theta))*(yp - get_yref(theta))
+    constraint.expr = vertcat(eL, eC)
 
     params = types.SimpleNamespace()
-    # params.xd = xref
-    # params.yd = yref
-    # params.grad_xd = grad_xref
-    # params.grad_yd = grad_yref
-    # params.phi_d = phiref
-    # params.theta_hat = theta_hat
     params.Q1 = Q1
     params.Q2 = Q2
     params.R1 = R1

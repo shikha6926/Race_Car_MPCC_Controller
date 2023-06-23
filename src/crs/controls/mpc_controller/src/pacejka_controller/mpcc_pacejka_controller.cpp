@@ -95,21 +95,41 @@ PacejkaMpccController::PacejkaMpccController(mpcc_pacejka_config config,
 std::vector<std::vector<double>> PacejkaMpccController::getPlannedTrajectory()
 {
   std::vector<std::vector<double>> traj;
+  int lap_count = 0;
+
   for (int i = 0; i < solver_->getHorizonLength(); i++)
   {
     double x_pos = last_solution.states_[i * solver_->getStateDimension() + pacejka_vars::X];
     double y_pos = last_solution.states_[i * solver_->getStateDimension() + pacejka_vars::Y];
     double vel = std::sqrt(std::pow(last_solution.states_[i * solver_->getStateDimension() + pacejka_vars::VX], 2) +
                            std::pow(last_solution.states_[i * solver_->getStateDimension() + pacejka_vars::VY], 2));
+    lap_count = last_solution.states_[i * solver_->getStateDimension() + pacejka_vars::THETA] / spline_track.getMaxArcLength();
+    double distance_on_track = last_solution.states_[i * solver_->getStateDimension() + pacejka_vars::THETA] -
+                               lap_count * spline_track.getMaxArcLength();
+
+    // Update tracking point based on predicted distance on track
+    mpc_solvers::pacejka_solvers::trajectory_track_point track_point;
+  
+    double x_ref = spline_track.getRefCoords(distance_on_track).x();
+    double y_ref = spline_track.getRefCoords(distance_on_track).y();
+    double grad_x_ref = spline_track.getGradient(distance_on_track).x();
+    double grad_y_ref = spline_track.getGradient(distance_on_track).y();
+    double phi_ref = spline_track.getTangentAngle(grad_y_ref, grad_x_ref) + lap_count * 2 * M_PI;
+
+    std::cout << "Predicted x:" << x_pos<< "\n";
+    std::cout << "Predicted y :" << y_pos << "\n";
+    std::cout << "Predicted vel :" << vel << "\n";
+    std::cout << "Predicted yaw:" << last_solution.states_[i * solver_->getStateDimension() + pacejka_vars::YAW] << "\n"; 
+    std::cout << "Predicted theta:" << last_solution.states_[i * solver_->getStateDimension() + pacejka_vars::THETA] << "\n";
     // Append values to trajectory for visualization
     traj.push_back({
         x_pos,                                                                        // Planned x
         y_pos,                                                                        // Planned y
         vel,                                                                          // Planned velocity
         last_solution.states_[i * solver_->getStateDimension() + pacejka_vars::YAW],  // Planned Yaw
-        last_solution.reference_on_track_[i].x(),                                     // Reference x
-        last_solution.reference_on_track_[i].y(),                                     // Reference y
-        last_solution.reference_on_track_[i](2)                                       // Reference yaw
+        x_ref,                                     // Reference x
+        y_ref,                                     // Reference y
+        phi_ref                                    // Reference yaw
     });
   }
 
@@ -130,9 +150,6 @@ void PacejkaMpccController::initialize(crs_models::pacejka_model::pacejka_car_st
   // Initial torque input. Lets use 50% throttle
   last_input_.torque = 0.5;
   // Set initial arc length
-  // theta_ = getStaticTrack()->getArcLength(
-  //     getStaticTrack()->getClosestTrackPointIdx(Eigen::Vector2d(state.pos_x, state.pos_y)));
-
   int spline_index = spline_track.getclosestsplineindex(Eigen::Vector2d(state.pos_x, state.pos_y), spline_track);
   theta_ = spline_track.gettheta(spline_index, Eigen::Vector2d(state.pos_x, state.pos_y), spline_track);
   
@@ -262,11 +279,6 @@ crs_models::pacejka_model::pacejka_car_input PacejkaMpccController::getControlIn
     track_point.grad_y = spline_track.getGradient(distance_on_track).y();
     track_point.theta = distance_on_track + laps_ * spline_track.getMaxArcLength();
     track_point.phi = spline_track.getTangentAngle(track_point.grad_y, track_point.grad_x) + laps_ * 2 * M_PI;
-
-    std::cout << "Control input x:" << track_point.x << "\n";
-    std::cout << "Control input y :" << track_point.y << "\n";
-    std::cout << "Control input phi:" << track_point.phi << "\n"; 
-    std::cout << "Control input theta:" << track_point.theta << "\n";
 
     // Update reference visualization
     last_solution.reference_on_track_[current_stage] = Eigen::Vector3d(track_point.x, track_point.y, track_point.phi);

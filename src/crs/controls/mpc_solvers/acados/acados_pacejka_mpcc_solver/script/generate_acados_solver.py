@@ -62,9 +62,9 @@ def build_acados_solver(N: int, Ts: float, acados_source_path: str, model):
     ocp.dims.nbu = nu
     ocp.dims.nu = nu
     ocp.dims.N = N
-    ocp.dims.nh = 1
-    ocp.dims.nsh = 1
-    ocp.dims.ns = nx + nu + 1
+    ocp.dims.nh = 2
+    ocp.dims.nsh = 2
+    ocp.dims.ns = nx + nu +  ocp.dims.nh
 
     ocp.dims.nsbx = nx
     ocp.dims.nsbu = nu
@@ -75,13 +75,12 @@ def build_acados_solver(N: int, Ts: float, acados_source_path: str, model):
     ocp.model.cost_expr_ext_cost = model.cost_expr_ext_cost
     ocp.model.cost_expr_ext_cost_e = 0
 
-    
-    ocp.constraints.lh = np.array([-1.0])
-    ocp.constraints.uh = np.array([1.0])
+    ocp.constraints.lh = np.array([0.001, -0.25])
+    ocp.constraints.uh = np.array([0.001, 0.25])
 
     ocp.constraints.lsh = np.zeros(ocp.dims.nsh)
     ocp.constraints.ush = np.zeros(ocp.dims.nsh)
-    ocp.constraints.idxsh = np.array([0])
+    ocp.constraints.idxsh = np.arange(ocp.dims.nh)
 
     # track_radius = 0.85/2
     # ocp.constraints.lh = np.array([-track_radius, -track_radius])
@@ -98,10 +97,10 @@ def build_acados_solver(N: int, Ts: float, acados_source_path: str, model):
     ocp.constraints.usbu = np.zeros(ocp.dims.nsbu)
     ocp.constraints.idxsbu = np.arange(nu)
 
-    ocp.cost.zl = 100*np.ones(nu + nx + 1)
-    ocp.cost.zu = 100*np.ones(nu + nx + 1)
-    ocp.cost.Zl = np.zeros(nu + nx + 1)
-    ocp.cost.Zu = np.zeros(nu + nx + 1)
+    ocp.cost.zl = 100*np.ones(ocp.dims.ns)
+    ocp.cost.zu = 100*np.ones(ocp.dims.ns)
+    ocp.cost.Zl = np.zeros(ocp.dims.ns)
+    ocp.cost.Zu = np.zeros(ocp.dims.ns)
 
     # setting constraints
 
