@@ -1,0 +1,139 @@
+# Description of configuration files can be found at "https://gitlab.ethz.ch/ics-group/projects/andrea/crs-2.0/-/wikis/ros-configuration"
+
+state_type: pacejka_car
+input_type: pacejka_car
+
+# ===============================================================
+#   Example Configuration for PID controller
+# ===============================================================
+controller_type: PID
+max_rate: 50
+controller_params:
+  target_velocity: 2
+  lag_compensation_time: 0.2
+  use_filter: false
+  b_filter: [0.0985,0.2956,0.2956,0.0985]
+  a_filter: [1.0000,-0.5772,0.4218,-0.0563]
+  Kd: 2.0
+  Kp: 4
+  Ki: 0
+  # crs uses a torque between 0 and 1. The kinematic model uses a different torque range internally.
+  # the conversion is done with the linear function torque_km = a * torque_crs + b
+  a_torque:  6.44026018
+  b_torque:   0.13732343
+
+  steer_limit: 0.4
+
+# ===============================================================
+#   Example Configuration for Feed Back Feed Forward controller
+#            [UNCOMMENT FOR FF FB CONTROLLER]
+# ===============================================================
+#
+# controller_type: FF_FB
+# max_rate: 50
+# controller_params:
+#   target_velocity: 4.0
+#   use_filter: false
+#   b_filter: [0.0985,0.2956,0.2956,0.0985]
+#   a_filter: [1.0000,-0.5772,0.4218,-0.0563]
+
+#   Kd: 0.01
+#   Kp: 2.0
+#   Ki: 0.0
+#   # crs uses a torque between 0 and 1. The kinematic model uses a different torque range internally.
+#   # the conversion is done with the linear function torque_km = a * torque_crs + b
+#   a_torque:  6.44026018
+#   b_torque:   0.13732343
+#   steer_limit: 0.4
+
+#   K_torque_curv: 0.32
+#   mean_curv_dist: 70 # in number of track indices
+#   look_ahead_dist: 0.2
+#   lag_compensation_time: 0.2
+
+# controller_type: MPCC
+# max_rate: 30
+
+
+# ===============================================================
+#             Example Configuration for MPC controller
+#                [UNCOMMENT FOR MPC CONTROLLER]
+# ===============================================================
+
+# controller_params:
+#   Q1: 100.0
+#   Q2: 200.0
+#   R1: 0.2
+#   R2: 0.3
+#   R3: 0.2
+#   q: 3.5
+#   lag_compensation_time: 0.02
+#   solver_type: ACADOS
+
+
+# ===============================================================
+#                Overwrite model parameters
+#       [UNCOMMENT TO MISSMATCH CERTAIN MODEL PARAMS]
+# ===============================================================
+# model: 
+#  # This only overwrites the mass and inertia that the controller
+#  # perceives. You can add any other parameter (e.g. lr, lf. ...)
+#  # If a parameter is not present, the ground truth value from the 
+#  # model.yaml is loaded
+#  model_params: 
+#    m: 0.2
+#    I: 0.000605
+
+
+
+
+# ===============================================================
+#                    CONTROLLER VISUALIZER
+# ===============================================================
+
+visualizer:
+  rate: 10
+  type: last_reference
+  # Visualizer specific  parameters
+  frame_id: crs_frame # default
+  namespace: pid # default
+
+  use_arrows: false # If true, use arrows to visualize planned and reference yaw angle. This option is a lot slower and may introduce visual lags
+
+  r: 1
+  g: 0
+  b: 0
+  a: 1
+  size_x: 0.05 # 0.07 for arrows
+  size_y: 0.05 # 0.02 for arrows
+  size_z: 0.05 # 0.02 for arrows
+
+
+# ===============================================================
+#                        MPC VISUALIZER
+#                 [UNCOMMENT FOR MPC CONTROLLER]
+# ===============================================================
+# visualizer:
+#   type: mpc
+#   rate: 10 # Hz
+#   frame_id: crs_frame # default
+#   namespace: mpc # default
+
+#   use_arrows: true # If true, use arrows to visualize planned and reference yaw angle. This option is a lot slower and may introduce visual lags
+
+#   double_min_velocity: 1.5 # Min velocity for visualization (this or below gets mapped to blue)
+#   double_max_velocity: 2.5 # Max velocity for visualization (this or above gets mapped to red)
+
+#   planned:
+#     size_x: 0.04 # 0.07 for arrows
+#     size_y: 0.04 # 0.02 for arrows
+#     size_z: 0.04 # 0.02 for arrows
+
+#   reference:
+#     r: 1
+#     g: 0
+#     b: 0
+#     a: 1
+#     size_x: 0.04 # 0.07 for arrows
+#     size_y: 0.04 # 0.02 for arrows
+#     size_z: 0.04 # 0.02 for arrows

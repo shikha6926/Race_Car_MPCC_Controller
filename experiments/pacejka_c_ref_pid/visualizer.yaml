@@ -1,0 +1,26 @@
+
+# node params
+node_rate: 30 # hz
+show_track_angle: false # If yes, publishes arrow instead of line of track center. This slows down visualization
+point_downsampling_factor: 5 # only render every ith point of the track
+lloyd_flag: true
+
+trajectory:
+  show_past_est_trajectory: true
+  show_past_gt_trajectory: false
+  number_of_past_samples: -1
+
+estimate:
+  color:
+    r: 0
+    g: 0
+    b: 0.5
+    a: 1
+
+
+gt:
+  color:
+    r: 0
+    g: 0
+    b: 1
+    a: 1

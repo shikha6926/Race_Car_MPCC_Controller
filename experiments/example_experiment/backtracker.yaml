@@ -1,0 +1,17 @@
+# Description of configuration files can be found at "https://gitlab.ethz.ch/ics-group/projects/andrea/crs-2.0/-/wikis/ros-configuration"
+
+crash_detector_node:
+  distance_tolerance: 0.0 # How much slack we give on the track. A crash is only detected if the car is away from track boundary by this much
+  time_tolerance: 10 # How long (s) the car has to not be moving to trigger the crash detector
+  min_move_distance: 0.05 # How much the car must have moved during 'time_tolerance' to not trigger the crash detector [m]
+  check_rate: 5 # How often we check for collisision [Hz]
+  collision_msg_rate: 2 # send collision messages at x [Hz]
+
+input_filter_node:
+  block_time: 0.1 #How long to wait after the last emergency input to switch back to the main controller input
+
+linear_backtracker_node:
+  publish_freq: 20 # how often to publish input commands [Hz]
+  backtrack_distance: 0.1 # How far to drive back [m]
+  input_torque: 0.3 # What torque (absolute value) to apply in backtrack state
+  max_backtrack_time: 2 # How long to publish backtrack commands before giving up [s]

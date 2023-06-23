@@ -1,0 +1,42 @@
+state_type: pacejka_car
+input_type: pacejka_car
+
+# process_noise:
+#   type: multivariate_gaussian
+#   seed: 42
+#   mean:
+#     value: [[0], [0], [0], [0], [0], [0]]
+
+sensors:
+  sensor_names: ["vicon", "imu"]
+  vicon:
+    R:
+      value: [[0.001], [0.001], [0.001]]
+      is_diag: true
+    frequency: 200 # Hz
+    key: vicon # optional, if not set us e name of sensor
+    measurement_noise:
+      type: multivariate_gaussian
+    delay: 0.0
+
+  imu:
+    R:
+      value: [[0.001], [0.001], [0.001]]
+      is_diag: true
+    frequency: 250 #Hz
+    key: imu # optional, if not set us e name of sensor
+    measurement_noise:
+      type: multivariate_gaussian
+      seed: 1
+      mean:
+        value: [[0], [0], [0]]
+    delay: 0.0
+
+initial_state: [0.15, -1.05, 0, 0.5, 0, 0]
+initial_input: [0.0, 0.2]
+
+frequency: 250 #Hz, speed of simulator
+
+# Not yet implemented
+input_delay: 0.01 # input delay in seconds
+do_collision_checks: true

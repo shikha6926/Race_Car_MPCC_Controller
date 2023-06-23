@@ -1,0 +1,43 @@
+# Description of configuration files can be found at "https://gitlab.ethz.ch/ics-group/projects/andrea/crs-2.0/-/wikis/ros-configuration"
+
+# ============ THIS IS THE GROUND TRUTH MODEL FOR SIMULATION ============ 
+# If using ros, paramaters located at /model
+
+# type describes what type of model we want to use / should be loaded
+type: "pacejka_discrete"
+
+# Q (process noise covariance matrix)
+Q:
+  value:
+    [
+      [0.001, 0, 0, 0, 0, 0],
+      [0, 0.001, 0, 0, 0, 0],
+      [0, 0, 0.001, 0, 0, 0],
+      [0, 0, 0, 0.0001, 0, 0],
+      [0, 0, 0, 0, 0.0001, 0],
+      [0, 0, 0, 0, 0, 0.0001],
+    ] 
+  is_diag: false
+
+model_params:
+  # size params
+  lr: 0.038
+  lf: 0.052
+  m: 0.181
+  I: 0.000505
+
+  # lateral force params
+  Df: 0.65
+  Cf: 1.5
+  Bf: 5.2
+  Dr: 1.0
+  Cr: 1.45
+  Br: 8.5
+
+  # longitudinal force params
+  Cm1: 0.98028992
+  Cm2: 0.01814131
+  Cd: 0.02750696
+  Croll: 0.08518052
+
+  tau: 0.1 # to make this compatible with kinematic model
