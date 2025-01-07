@@ -51,23 +51,17 @@ Python_Spline_Generation/
 - **Simulation and Analysis Outputs**  
   Provides detailed logs, trajectory visualizations, and performance metrics for simulation analysis.
 
-## Getting Started
-
-### Prerequisites
-
-To run this project, ensure you have the following:
-
+### Dependencies
 - **Python**: Version 3.8 or higher
 - **Required Python Libraries**: 
   - `numpy`
   - `matplotlib`
   - `scipy`
   - `pyyaml`
+- [CasADi](https://web.casadi.org/) (A symbolic framework for nonlinear optimization and algorithmic differentiation.)
+- [Acados](https://docs.acados.org/): A fast and embedded solvers for nonlinear optimal control.
 
-Install the required Python packages using:
 
-
-pip install -r requirements.txt
 
 ## Project Report and Presentation
 
@@ -91,6 +85,15 @@ This repository includes:
 - **Open-source Libraries**: Libraries like 'numpy', 'matplotlib', and 'scipy' supported the development of this project.
 
 ---
+
+## References
+[1] Liniger, A., Domahidi, A., and Morari, M. , “Optimization-based autonomous racing of 1: 43 scale RC cars. ” Optimal Control Applications and Methods, vol. 36(5), pp. 628–647, July 2015.\
+[2] D. Lam, C. Manzie, and M. Good, “Model predictive contouring control,” in Proceedings of the IEEE Conference on Decision andControl. Institute of Electrical and Electronics Engineers Inc., 2010, pp. 6137–6142.\
+[3] E. Bakker, L. Nyborg, and H. Pacejka, “Tyre modelling for use in vehicle dynamics studies,” SAE, 1987.\
+[4] Joel A E Andersson and Joris Gillis and Greg Horn and James B Rawlings and Moritz Diehl, ”CasADi - A software framework for nonlinear optimization and optimal control”, Mathematical Programming Computation, vol. 11, no. 1, pp. 1–36, 2019, doi:10.1007/s12532-018-0139-4.\
+[5] Verschueren, R., Frison, G., Kouzoupis, D., Frey, J., van Duijkeren, N., Zanelli, A., Novoselnik, B., Albin, T., Quirynen, R., & Diehl, M. (2021). **acados -- a modular open-source framework for fast embedded optimal control**. *Mathematical Programming Computation*.
+
+
 
 ## Code Sharing Notice
 
