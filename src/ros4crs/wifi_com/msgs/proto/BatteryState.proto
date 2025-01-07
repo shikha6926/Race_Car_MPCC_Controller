@@ -1,8 +1,0 @@
-syntax = "proto2";
-
-message BatteryState {
-    /** Total combined voltage [V] */
-    required float voltage = 1;
-    /** Current (negative if discharging) [A] */
-    optional float current = 2;
-}

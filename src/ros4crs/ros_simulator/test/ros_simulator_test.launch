@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-
-    <!-- Start Visualization Node -->
-    <include file="$(find ros_simulator)/launch/default_standalone.launch">
-        <arg name="simulator_config" value="$(find ros_simulator)/test/config/test_pacejka_imu_vicon.yaml" />
-    </include>
-    <test pkg="ros_simulator" test-name="test_simulator_node" type="test_simulator_node" />
-</launch>
