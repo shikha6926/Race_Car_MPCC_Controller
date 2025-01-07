@@ -4,6 +4,17 @@ This repository implements a **Modified Model Predictive Contouring Control (MPC
 
 ---
 
+### Full Track Spline
+![Full Track Spline](docs/images/FREIBURG_FULL_TRACK_SPLINE.pdf)
+
+This is the visualization of the full track spline that represents the complete racing path for autonomous vehicle navigation.
+
+### Trajectory Plot
+![Trajectory Plot](docs/images/modified_mpcc_final.png)
+
+The trajectory plot demonstrates the path taken by the vehicle during the real vehicle run.
+
+
 ## Directory Structure
 ```plaintext
 Python_Spline_Generation/
