@@ -1,8 +1,0 @@
-# Description of configuration files can be found at "https://gitlab.ethz.ch/ics-group/projects/andrea/crs-2.0/-/wikis/ros-configuration"
-# size params
-lr: 0.038
-lf: 0.052
-tau: 0.01
-
-a: 6
-b: 0.2
