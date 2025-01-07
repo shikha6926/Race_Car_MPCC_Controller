@@ -26,7 +26,6 @@ Python_Spline_Generation/
 ├── track_splines.py                 # Script for spline generation
 ├── src/
     ├── crs/
-        ├── commons/                 # Common utilities and helper functions
         ├── controls/
             ├── common/              # Common control logic
             ├── mpc_controller/      # Core MPCC implementation
