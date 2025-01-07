@@ -6,7 +6,6 @@ This repository implements a **Modified Model Predictive Contouring Control (MPC
 
 ## Directory Structure
 
-```plaintext
 Python_Spline_Generation/
 ├── .idea/                           # IDE-specific configuration files
 ├── FREIBURG_FULL_TRACK.yaml         # YAML representation of the Freiburg full track
@@ -21,7 +20,6 @@ Python_Spline_Generation/
             ├── common/              # Common control logic
             ├── mpc_controller/      # Core MPCC implementation
             ├── mpc_solvers/         # Solvers for MPC optimization
-
 
 ## Features
 
@@ -58,7 +56,7 @@ To run this project, ensure you have the following:
 
 Install the required Python packages using:
 
-```bash
+
 pip install -r requirements.txt
 
 ## Project Report and Presentation
@@ -80,7 +78,7 @@ This repository includes:
 ## Acknowledgments
 
 - **Freiburg Racing Dataset**: Provided essential track data for spline generation and evaluation.
-- **Open-source Libraries**: Libraries like `numpy`, `matplotlib`, and `scipy` supported the development of this project.
+- **Open-source Libraries**: Libraries like 'numpy', 'matplotlib', and 'scipy' supported the development of this project.
 
 ---
 
