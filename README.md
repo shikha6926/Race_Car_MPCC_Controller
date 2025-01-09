@@ -5,7 +5,7 @@ This repository implements a **Modified Model Predictive Contouring Control (MPC
 ---
 
 ### Full Track Spline
-![Full Track Spline](docs/images/FREIBURG_FULL_TRACK_SPLINE.pdf)
+![Full Track Spline](docs/images/RACE_CAR_TRACK.png)
 
 This is the visualization of the full track spline that represents the complete racing path for autonomous vehicle navigation.
 
